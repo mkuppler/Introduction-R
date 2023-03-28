@@ -1,0 +1,374 @@
+---
+title: "Introduction to R - Session 3^[Please do not circulate without permission from the author.]"
+author: "Matthias Kuppler^[Department of Social Sciences, University Siegen. Email: <matthias.kuppler@uni-siegen.de>.]"
+date: "Version: `r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    df_print: paged
+    number_sections: true
+---
+
+```{r setup, echo=FALSE}
+# Set code chunk options
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# Warm-up
+
+**Part 1:** Please write code that creates the following vectors.
+
+-   A numeric vector with values 15 to 8 in steps of 1: 15, 14, ..., 8
+
+-   A numeric vector with values from 75 to 5 in steps of 5: 75, 70, ..., 5
+
+-   A numeric vector of length 9 with values going from 24 to 20
+
+-   A logical vector: TRUE TRUE FALSE TRUE TRUE
+
+```{r warm-up-1}
+
+```
+
+**Part 2:** Please compute the mean and standard deviation of the vector my.num. Round the result to 2 digits.
+
+```{r warm-up-2}
+# Create my.num
+my.num <- c(1:6, NA, 25:14, NA, seq(from = 5, to = 18, length.out = 8), NA)
+
+# Compute mean and standard deviation
+
+```
+
+**Part 3:** Please use logical operators to test the following propositions...
+
+-   The values of vector my.num1 are equal to 3
+
+-   The vector my.num1 is longer than the vector my.num2
+
+-   The mean and standard deviation of my.num1 are larger than the mean and standard deviation of my.num2
+
+```{r warm-up-3}
+# Set seed (so that everyone gets the same result)
+set.seed(seed = 1234)
+
+# Create vectors
+my.num1 <- sample(x = 1:100, size = 50, replace = TRUE)
+my.num2 <- sample(x = 1:100, size = 25, replace = TRUE)
+
+# Test the propositions
+
+```
+
+# Control flow commands
+
+Control flow commands are important for programming in R. They include if-else structures and several different types of loops. You can learn more about these commands with ?Control.
+
+## If-else statements
+
+The basic structure of if-else commands is: if(condition = TRUE){ command 1 } else{ command 2 }
+
+If-else statements test whether a certain user-specified *condition* is TRUE or FALSE. If the condition is TRUE, *command 1* is executed. If the condition is FALSE, *command 2* is executed.
+
+```{r if-else-1}
+# Example: Use if-else to test whether a value is even or uneven
+val <- 6
+
+if(val %% 2 == 0){
+  print("The input-value is an even number.")
+} else{
+  print("The input-value is an uneven number.")
+}
+```
+
+Simpler *if statements* are also possible: if(condition = TRUE){command}. Here, nothing happens if the condition is FALSE.
+
+```{r if-else-2}
+# Example: If vector is numeric, calculate its mean value
+my.vec <- 1:10
+my.vec2 <- letters[1:10]
+
+if(is.numeric(my.vec) == TRUE){mean(my.vec)}  # Calculates mean
+if(is.numeric(my.vec2) == TRUE){mean(my.vec)}  # Does nothing
+```
+
+R has an additional in-build function called ifelse() that is very handy for variable recoding. The syntax is: ifelse(condition, value-if-true, value-if-false). The ifelse() command is vectorized.
+
+```{r if-else-3}
+# Example: Replace all values < 5 with missing values
+my.vec <- ifelse(my.vec < 5, NA, my.vec)
+
+# Inspect result
+my.vec
+```
+
+## Task 1
+
+**Part 1:** Please use ifelse() to set all uneven values in my.vec to 0.
+
+```{r task-1-1}
+# Create vector
+my.vec <- 2:18
+
+# Set uneven values to 0
+
+```
+
+**Part 2:** Please use an if-else statement to print "This vector keeps the doctor away!" if the vector contains the word "apple" and to print "This vector DOES NOT keep the doctor away!" if the vector does not contain the word "apple". (Tip: You can use *word %in% my.vec* to test whether word is in my.vec!)
+
+```{r task-1-2}
+# Vectors to test
+my.char1 <- c("banana", "potato", "apple", "peach")
+my.char2 <- c("pineapple", "broccoli", "pear", "pomegranate")
+
+# If-else statement
+
+```
+
+
+## Loops
+
+Loops are used to execute the same command repeatedly until some condition is met. There are three types of loops:
+
+-   for(i in seq){command}: Execute the command for each *i* (a running number) in a sequence (*seq*) of values
+
+-   while(condition){command}: Execute command as long as the condition is TRUE
+
+-   repeat{command}: Repeats command infinitely unless it is stopped by the break command
+
+If the loop command has an error that prevents it from stopping, you can manually stop it by clicking on the "stop" button that appears in the upper right corner of the console.
+
+The for() loop is useful to apply a command separately to all elements of a vector. You should only use this loop in very specific cases because R functions are usually vectorized. The for() loop is less efficient and takes longer to compute than vectorized functions.
+
+```{r for-loop}
+# Example: Calculate the cumulative sum of my.vec and save result in "res.vec"
+## Create my.vec
+my.vec <- 1:5
+
+## Create empty result vector (pre-allocating memory is more efficient than building vectors "on the fly")
+res.vec <- numeric(length = length(my.vec))
+
+## Calculate cumulative sum: Can you explain what the command does?
+for(i in 1:length(my.vec)){
+  if(i == 1){
+    res.vec[i] <- my.vec[i]
+  } else{
+    res.vec[i] <- res.vec[i-1] + my.vec[i]
+  }
+}
+res.vec
+
+## Compare to build-in R function
+cumsum(x = my.vec)
+```
+
+The while() loop is slightly more flexible than the for() loop because you can define any stopping-rule you like. The while() loop below repeatedly calls the paste() function to print a string of characters.
+
+```{r while-loop}
+# Create running number
+i <- 1
+
+# Loop
+while(i < 10){
+  # The command
+  print(paste("The current number is:", i, sep = " "))
+  # Advance running number (If you forget this, the loop runs infinitely)
+  i <- i + 1
+}
+```
+
+The repeat() loop is just another flavor of the while() loop. Make sure to add the *break* command to tell R that it should stop the loop. You can also use the *next* command to skip one round of the loop. The command below does the same as the while() loop above except that it skips the number 4 (look closely at the output).
+
+```{r repeat-loop}
+# Create running number
+i <- 1
+
+# Loop
+repeat{
+  # Skip if i is equal to 4 (but still advance tick counter)
+  if(i == 4){
+    i <- i + 1
+    next
+    }
+  # Stop loop if i is equal to 10
+  if(i == 10){break}
+  # The command
+  print(paste("The current number is:", i, sep = " "))
+  # Advance running number (If you forget this, the loop runs infinitely)
+  i <- i + 1
+}
+```
+
+## Task 2
+
+Please write an for() loop that calculates and prints the difference between value $i$ and value $i-1$ of vector my.num. The first output of the loop would be value 2 - value 1.
+
+```{r task-2}
+# Vector to loop over
+my.num <- 1:10
+
+# Your loop
+```
+
+# Functions
+
+## Writing your own functions
+
+Base R comes with a large number of build-in functions and many more functions are available in packages that you can install from CRAN (more on that in the next session). Nevertheless, you might encounter very specific tasks for which no function exists. If you encounter this task more than once, it is worthwhile to write a function for it.
+
+Functions are created with the **function()** command. The basic syntax is:
+
+<!-- -->
+
+```         
+my.fun <- function(input1, input2 = default-value){
+  do something with the inputs
+  return( output of the function )
+}
+```
+
+You have to supply names for the inputs to the function (here: input1, input2). You can also set default values for these inputs. Unless users of your function specify a value for the input, R will use this default value.
+
+In the return() command, you specify which results of the function's internal computations are reported back as output.
+
+You can tell the users of your function that they use the function incorrectly by issuing a diagnostic message or a warning. To do that, use the **message()** or **warning()** commands. The **stop()** command stops the execution of the function and issues a warning.
+
+The code below creates a function that calculates the mean of a numeric vector. We will use the stop() command to test whether the user supplied a numeric vector or not. We will use the warning() command to inform users whether the numeric vector contained missing values.
+
+```{r write-function-1}
+# Write function named "avg"
+avg <- function(x){
+  # Check whether input x is a numeric vector
+  if(is.numeric(x) == FALSE){stop("Input vector not numeric.")}
+  # Check whether input x has missing values
+  if(sum(is.na(x)) > 0){warning("Removed missing values of input vector.")}
+  # Remove missing values
+  x <- x[is.na(x) == FALSE]
+  # Return mean
+  return(
+    sum(x) / length(x)
+  )
+}
+
+# Test function
+avg(x = 1:10)  # Works!
+avg(x = c(1:9, NA))  # Returns warning as intended
+avg(x = c(TRUE, FALSE))  # Stops and returns warning as intended
+```
+
+After you have created your function, you can use it in the same way as any build-in function. It is possible, for instance, to loop over your own function.
+
+**Extended example:** The code below adds an additional option "na.rm" to avg(). The option allows users to decide whether missing values should be removed or not. The warning message is changed such that it prints "Input vector has missing values" (if missing values are not removed) and "Removed missing values of input vector" (if missing values are removed). The default value of na.rm is set to TRUE.
+
+```{r write-function-2}
+# Write function
+avg <- function(x, na.rm = TRUE){
+  # Check whether x is a numeric vector
+  if(is.numeric(x) == FALSE){stop("Input vector not numeric.")}
+  # Check na.rm option
+  if(na.rm == TRUE){
+    # Check whether x has missing values
+    if(sum(is.na(x)) > 0){warning("Removed missing values of input vector.")}
+    # Remove missing values
+    x <- x[is.na(x) == FALSE]
+  } else{
+    # Issue warning
+    if(sum(is.na(x)) > 0){warning("Input vector has missing values.")}
+  }
+  # Return mean
+  return(
+    sum(x) / length(x)
+  )
+}
+
+# Test function
+avg(x = 1:10)  # Works!
+avg(x = c(1:9, NA), na.rm = TRUE)  # Returns warning as intended
+avg(x = c(1:9, NA))  # Returns warning as intended (R uses default value)
+avg(x = c(1:9, NA), na.rm = FALSE)  # Returns warning as intended (does not remove missing values)
+avg(x = c(TRUE, FALSE))  # Stops and returns warning as intended
+```
+
+## Task 3
+
+Please write a function called *sd2* that takes a numeric vector *x* as its input and reports the (unbiased sample) standard deviation of *x* as its output. The standard deviation is a measure of variation around the mean. It is defined as
+
+$$
+SD = \sqrt{\frac{1}{N-1} \times \sum_{i=1}^{N} (x_i - \bar{x})^2}
+$$
+
+Where $N$ is the number of elements in vector *x* (i.e., its length), $\sum$ is the summation operator (i.e., the sum() function), $x_i$ are the values in vector *x*, and $\bar{x}$ is the mean of vector *x* (i.e., the mean() function). Finally, $\sqrt{}$ is the square root (i.e., the sqrt() function).
+
+```{r task-3}
+# Create numeric vector
+my.vec <- sample(x = 1:100, size = 50, replace = TRUE)
+
+# Function
+
+```
+
+## The apply() command family
+
+Especially when you work with matrices (also: arrays and data frames), there are often situations in which you want to apply a (user-written) **function across multiple rows or across multiple columns**. The **apply()** command allows you to do just that!
+
+The syntax is: apply(X = my.mat, MARGIN = c(1, 2), FUN = my.fun, ...), where my.mat is a matrix and my.fun is the function that you want to apply. The MARGIN option allows you to specify whether the function should be applied over the rows (MARGIN = 1), columns (MARGIN = 2), or both (MARGIN = c(1, 2)). The "..." is a placeholder where you can specify the additional options of the function (e.g., the na.rm option).
+
+Below, we use apply() to compute the row-mean and the column-mean. Instead of the mean() function, we could have used our very own avg() function.
+
+```{r apply-1}
+# Create matrix
+my.mat <- matrix(data = 1:9, nrow = 3)
+my.mat
+
+# Compute row-mean
+apply(X = my.mat, MARGIN = 1, FUN = mean, na.rm = TRUE)  # Can you interpret the result?
+apply(X = my.mat[1:2, ], MARGIN = 1, FUN = mean, na.rm = TRUE)  # Can you interpret the result?
+
+# Compute column-mean
+apply(X = my.mat, MARGIN = 2, FUN = mean, na.rm = TRUE)  # Can you interpret the result?
+
+# Compute both
+apply(X = my.mat, MARGIN = c(1, 2), FUN = mean, na.rm = TRUE)  # Can you interpret the result?
+
+# Compare to mean() without apply()
+mean(x = my.mat)
+```
+
+The **lapply()** and **sapply()** commands allow you to apply a function separately to all elements in a list or vector. They are especially useful for functions that are not vectorized. It is more efficient in these situations to use lapply() or sapply() rather than a loop.
+
+lapply() and sapply() are basically equivalent but sapply() provides the output in a nicer format (as a vector rather than as a list). Below, we will use both commands to test whether the elements of a list are numeric (TRUE) or not (FALSE).
+
+```{r apply-2}
+# Create list
+my.list <- list("a", 2, TRUE, 4)
+
+# Use lapply() to test whether list elements are numeric
+lapply(X = my.list, FUN = is.numeric)
+
+# Use sapply() to whether list elements are numeric
+sapply(X = my.list, FUN = is.numeric)
+
+# Compare to command without lapply() or sapply()
+is.numeric(my.list)
+```
+
+## Task 4
+
+Please use the apply() function to...
+
+-   Find the maximum value for each row of my.mat
+
+-   Find the minimum value for each column of my.mat
+
+```{r task-4}
+# Set seed (so that everyone gets the same results)
+set.seed(seed = 1234)
+
+# Create matrix
+my.mat <- matrix(data = sample(x = 1:100, size = 16, replace = TRUE), nrow = 4)
+my.mat
+
+# Row maximum
+
+# Column minimum
+
+```

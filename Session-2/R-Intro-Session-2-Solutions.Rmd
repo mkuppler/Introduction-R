@@ -1,0 +1,188 @@
+---
+title: "Introduction to R - Session 3^[Please do not circulate without permission from the author.]"
+author: "Matthias Kuppler^[Department of Social Sciences, University Siegen. Email: <matthias.kuppler@uni-siegen.de>.]"
+date: "Version: `r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    df_print: paged
+    number_sections: true
+---
+
+```{r setup, echo=FALSE}
+# Set code chunk options
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# Warm-up
+
+**Part 1:** Please write code that creates the following vectors.
+
+-   A numeric vector with values 15 to 8 in steps of 1: 15, 14, ..., 8
+
+-   A numeric vector with values from 75 to 5 in steps of 5: 75, 70, ..., 5
+
+-   A numeric vector of length 9 with values going from 24 to 20
+
+-   A logical vector: TRUE TRUE FALSE TRUE TRUE
+
+```{r warm-up-1}
+15:8
+seq(from = 75, to = 5, by = -5)
+seq(from = 24, to = 20, length.out = 9)
+rep(x = c(TRUE, TRUE, FALSE), length.out = 5)
+```
+
+**Part 2:** Please compute the mean and standard deviation of the vector my.num. Round the result to 2 digits.
+
+```{r warm-up-2}
+# Create my.num
+my.num <- c(1:6, NA, 25:14, NA, seq(from = 5, to = 18, length.out = 8), NA)
+
+# Compute mean and standard deviation
+round(mean(x = my.num, na.rm = TRUE), digits = 2)
+round(sd(x = my.num, na.rm = TRUE), digits = 2)
+```
+
+**Part 3:** Please use logical operators to test the following propositions...
+
+-   The values of vector my.num1 are equal to 3
+
+-   The vector my.num1 is longer than the vector my.num2
+
+-   The mean and standard deviation of my.num1 are larger than the mean and standard deviation of my.num2
+
+```{r warm-up-3}
+# Set seed (so that everyone gets the same result)
+set.seed(seed = 1234)
+
+# Create vectors
+my.num1 <- sample(x = 1:100, size = 50, replace = TRUE)
+my.num2 <- sample(x = 1:100, size = 25, replace = TRUE)
+
+# Test the propositions
+my.num1 == 3
+length(my.num1) > length(my.num2)
+mean(my.num1, na.rm = TRUE) > mean(my.num2, na.rm = TRUE) &
+  sd(my.num1, na.rm = TRUE) > sd(my.num2, na.rm = TRUE)
+
+# To understand the results
+mean(my.num1, na.rm = TRUE)
+mean(my.num2, na.rm = TRUE)
+sd(my.num1, na.rm = TRUE)
+sd(my.num2, na.rm = TRUE)
+
+# Extra: Number of elements in my.num1 == 3 (Why does this work?)
+sum(my.num1 == 3)
+```
+
+# Task 1
+
+**Part 1:** Please use ifelse() to set all uneven values in my.vec to 0.
+
+```{r solution-1-1}
+# Create vector
+my.vec <- 2:18
+
+# Set uneven values to 0
+my.vec <- ifelse(my.vec %% 2 != 0, 0, my.vec)
+
+# Inspect result
+my.vec
+```
+
+**Part 2:** Please use an if-else statement to print "This vector keeps the doctor away!" if the vector contains the word "apple" and to print "This vector DOES NOT keep the doctor away!" if the vector does not contain the word "apple". (Tip: You can use *word %in% my.vec* to test whether word is in my.vec!)
+
+```{r solution-1-2}
+# Vectors to test
+my.char1 <- c("banana", "potato", "apple", "peach")
+my.char2 <- c("pineapple", "broccoli", "pear", "pomegranate")
+
+# If-else statement
+if("apple" %in% my.char1){
+  print("This vector keeps the doctor away!")
+} else{
+  print("This vector DOES NOT keep the doctor away!")
+}
+
+if("apple" %in% my.char2){
+  print("This vector keeps the doctor away!")
+} else{
+  print("This vector DOES NOT keep the doctor away!")
+}
+```
+
+# Task 2
+
+Please write an for() loop that calculates and prints the difference between value $i$ and value $i-1$ of vector my.num. The first output of the loop would be value 2 - value 1.
+
+```{r solution-2}
+# Vector to loop over
+my.num <- 1:10
+
+# Your loop
+for(i in 2:length(my.num)){
+  print(my.num[i] - my.num[i - 1])
+}
+```
+
+# Task 3
+
+Please write a function called *sd2* that takes a numeric vector *x* as its input and reports the (unbiased sample) standard deviation of *x* as its output. The standard deviation is a measure of variation around the mean. It is defined as
+
+$$
+SD = \sqrt{\frac{1}{N-1} \times \sum_{i=1}^{N} (x_i - \bar{x})^2}
+$$
+
+Where $N$ is the number of elements in vector *x* (i.e., its length), $\sum$ is the summation operator (i.e., the sum() function), $x_i$ are the values in vector *x*, and $\bar{x}$ is the mean of vector *x* (i.e., the mean() function). Finally, $\sqrt{}$ is the square root (i.e., the sqrt() function).
+
+```{r solution-3}
+# Create numeric vector
+my.vec <- sample(x = 1:100, size = 50, replace = TRUE)
+
+# Function
+sd2 <- function(x, na.rm = TRUE){
+  # Check whether input is numeric
+  if(is.numeric(x) == FALSE){stop("Input vector not numeric.")}
+  # Check na.rm option
+  if(na.rm == TRUE){
+    # Check whether x has missing values
+    if(sum(is.na(x)) > 0){warning("Removed missing values of input vector.")}
+    # Remove missing values
+    x <- x[is.na(x) == FALSE]
+  } else{
+    # Issue warning
+    if(sum(is.na(x)) > 0){warning("Input vector has missing values.")}
+  }
+  # Return sample standard deviation
+  return(
+    sqrt(sum((x - mean(x))^2) / (length(x) - 1))
+  )
+}
+
+# Test function
+sd2(x = my.vec)
+sd(x = my.vec)  # Build-in R function
+```
+
+# Task 4
+
+Please use the apply() function to...
+
+-   Find the maximum value for each row of my.mat
+
+-   Find the minimum value for each column of my.mat
+
+```{r solution-4}
+# Set seed (so that everyone gets the same results)
+set.seed(seed = 1234)
+
+# Create matrix
+my.mat <- matrix(data = sample(x = 1:100, size = 16, replace = TRUE), nrow = 4)
+my.mat
+
+# Row maximum
+apply(X = my.mat, MARGIN = 1, FUN = max)
+
+# Column minimum
+apply(X = my.mat, MARGIN = 2, FUN = min)
+```
