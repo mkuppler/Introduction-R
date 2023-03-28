@@ -11,7 +11,7 @@ The repository contains one folder for each session. The folders contain knitted
 
 For sessions 3 and 4 as well as the homework, participants need access to the ALLBUS 2021 data set. The ALLBUS (Allgemeine Bevölkerungsumfrage der Sozialwissenschaften) is a yearly survey of the German population, comparable to the General Social Survey in the US. It started in 1980 and, since 1986, is conducted by GESIS. The ALLBUS 2021 data are available for free after registration under: https://search.gesis.org/research_data/ZA5280. Please place the downloaded and unzipped data set in the *odata* folder for sessions 3 and 4 as well as the homework.
 
-The materials are suitable for self-study. Students should open the knitted RMarkdown notebooks, type/copy the R code from the notebooks, and try to run the code in their own RStudio window.
+The materials are suitable for self-study. Students should open the RMarkdown notebooks, type/copy the R code from the notebooks, and try to run the code in their own RStudio window.
 
 Especially sessions 3 and 4 benefitted heavily from the *R for Data Science* book written by Hadley Wickham and Garrett Grolemund (available under https://r4ds.had.co.nz/).
 
