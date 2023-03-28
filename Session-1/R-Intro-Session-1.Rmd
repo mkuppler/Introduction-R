@@ -1,0 +1,553 @@
+---
+title: "Introduction to R - Session 1^[Please do not circulate without permission from the author.]"
+author: "Matthias Kuppler^[Department of Social Sciences, University Siegen. Email: <matthias.kuppler@uni-siegen.de>.]"
+date: "Version: `r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    df_print: paged
+    number_sections: true
+---
+
+```{r setup, echo=FALSE}
+# Set code chunk options
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# General
+
+-   To get to the help file associated with a command, type **?command** in the console. Example: ?mean opens the help file for the mean function.
+
+-   To execute a command, click on the line with the command and use the shortcut: **ctrl enter** (on Windows) or **cmd enter** (on Mac)**.** You can access previously executed commands in the console by tapping the "up" arrow on your keyboard.
+
+-   **Commands** are written in **code chunks** (the boxes starting with {r}). To insert a new code chunk, use the keyboard shortcut **ctrl alt i** (on Windows) or **cmd alt i** (on Mac).
+
+-   Within code chunks, **comments** (text that R does not interpret as code) are started with #.
+
+-   You can see a **list of all available shortcuts** under Tools -\> Keyboard Shortcuts Help. Alternatively you can use: **alt shift k**.
+
+# Cheat sheets
+
+Cheat sheets for base R and many packages can be found online. The cheat sheets give a good first overview of the most important functions and how they can be used.
+
+-   A cheat sheet for base R can be found under: <https://iqss.github.io/dss-workshops/R/Rintro/base-r-cheat-sheet.pdf>.
+
+-   A list of the most important functions in base R is provided under: <https://cran.r-project.org/doc/contrib/Baggott-refcard-v2.pdf>.
+
+# Objects and the environment
+
+Objects are created with the **assignment operator** \<- (Shortcut: alt -). All objects that have been created in a session are shown in the **environment** (upper right window in the RStudio interface). Objects can be inspected by clicking on them.
+
+You can **remove objects** from the environment with rm(). To remove all objects that are currently in the environment, use rm(list = ls()). The function ls() returns all objects in your environment.
+
+```{r create-objects}
+# Create object (contains the numeric value 1), look at environment
+my.obj <- 1
+
+# List everything in environment
+ls()
+
+# Remove object
+rm(my.obj)
+```
+
+# Vectors
+
+## Creating vectors
+
+There are several different ways to create vectors and scalars (= vectors of length 1). Please execute the commands below. The results are shown in the console.
+
+```{r create-vectors}
+# Empty vectors of specified length
+numeric(length = 3)
+character(length = 3)
+logical(length = 3)
+
+# Combine function: c(...)
+c(1, 2, 3)
+
+# Sequence operator (for numeric vectors)
+1:3
+3:1
+-2:2
+
+# letters operator (for character vectors)
+letters
+LETTERS
+
+# Sequence function (for numeric vectors)
+seq(from = 1, to = 3, by = .5)
+seq(from = 1, to = 2, length.out = 9)
+
+# Repeat function (for all vectors)
+rep(x = c("a", "b", "c"), times = 2)
+rep(x = c("a", "b", "c"), length.out = 5)
+rep(x = c(TRUE, FALSE), each = 2)
+
+# Random numbers (execute multiple times to verify that numbers are indeed random)
+sample(x = 1:10, size = 2, replace = FALSE)
+runif(n = 10, min = 0, max = 2)
+rnorm(n = 10, mean = 0, sd = 1)
+```
+
+## Task 1
+
+Please write the commands that create the following vectors. For some of these vectors, there are multiple ways to create them. If possible, avoid using the combine function c().
+
+-   14 13 12 11
+
+-   1 2 3 1 2 3
+
+-   1 2 3 3 2 1
+
+-   "a" "a" "b" "b" "c" "c"
+
+-   "d" "e" "f" "g" "h"
+
+-   3.2 3.4 3.6 3.8 4.0
+
+-   FALSE TRUE FALSE TRUE FALSE
+
+```{r task-1}
+
+```
+
+## Vector typing
+
+Please execute the commands below. Are the results weird? Why (not)? Can you make out a rule? Tip: Use class() to check the type of the resulting vector.
+
+```{r vector-typing}
+c(1, "a")
+c(1, TRUE)
+c(1, FALSE)
+c(TRUE, "a")
+```
+
+**Solution:** Vectors can only store data of **one** type. If you create vectors with multiple data types, R will try to convert the data to a common type. The hierarchy of conversion is: character \> numeric \> logical. Note that R internally stores logical vectors as numeric, where TRUE = 1 and FALSE = 0.
+
+Sometimes, data are stored in the wrong type (mostly numeric stored as character). You can ask R to convert the data to the appropriate type in this case.
+
+```{r, vector-conversion}
+as.numeric(c("1", "2"))
+as.character(1:10)
+as.logical(c("TRUE", "FALSE"))
+as.logical(c(1, 0, 1, 1))
+```
+
+## Vector attributes
+
+Vectors have some attributes associated with them, most notably their length (i.e., number of elements) and names (labels for each element).
+
+```{r vector-attributes}
+# Length
+my.vec <- 1:10
+length(my.vec)
+
+# Set names
+names(my.vec) <- letters[1:length(my.vec)]
+
+# Get names
+names(my.vec)
+
+# Inspect named vector
+my.vec
+```
+
+## Unitary and logical operators
+
+| Operator                | Definition                                                        |
+|--------------------------|----------------------------------------------|
+| \+                      | Addition                                                          |
+| \-                      | Subtraction                                                       |
+| \*                      | Multiplication                                                    |
+| /                       | Division                                                          |
+| \^                      | Power                                                             |
+| %%                      | Modulus (remainder b of division n by m)                          |
+| %/%                     | Integer division                                                  |
+| exp(x)                  | Euler's number to the power of x                                  |
+| log(x, base)            | Logarithm of x to the base (default: base = Euler's number)       |
+| log10(x)                | Logarithm of x to the base 10                                     |
+| sqrt(x)                 | Square root                                                       |
+| floor(x)                | Greatest integer \< x                                             |
+| ceiling(x)              | Smallest integer \> x                                             |
+| round(x, digits)        | Round value of x to chosen number of digits (default: digits = 0) |
+| abs(x)                  | Absolute value of x                                               |
+| max(x, na.rm = TRUE)    | Maximum value in x (exclude missing values before computation)    |
+| min(x, na.rm = TRUE)    | Minimum value of x                                                |
+| mean(x, na.rm = TRUE)   | Mean value of x                                                   |
+| median(x, na.rm = TRUE) | Median value of x                                                 |
+| var(x, na.rm = TRUE)    | Variance of x                                                     |
+| sd(x, na.rm = TRUE)     | Standard deviation of x                                           |
+
+: Selection of unitary operators and basic mathematical functions in R
+
+Operators and (most) functions in R are **vectorized**: They take one (or more) vectors of length n as input and give a vector of length n as output. In most cases, you do not need to write a loop to apply a function to all elements of a vector separately. This saves both lines of code and computation time.
+
+```{r unitary-operators}
+# Some examples: Can you explain what happens in each case?
+1 + 2
+1:2 + 3:4
+3:4 / 1:2
+c(1, 3, 7) * 2
+3%%2
+9%/%2
+TRUE + 1
+```
+
+Note that some operators have precedence over others. R follows the mathematical convention that division and multiplication have precedence over addition and subtraction. There are, however, also more tricky cases (see code below). Parentheses are used to influence precedence (e.g., $1+2/3$ vs $(1+2)/3$). It is advisable to always check whether a command produces the expected result.
+
+```{r operator-precedence}
+# Try the two commands: Why do they produce different results?
+1+2:4
+(1+2):4
+```
+
+If the two vectors connected by a unitary operator have unequal length, R does one of two things:
+
+-   If the length of the longer vector (e.g., length = 5) is not a multiple of the length of the shorter vector (e.g., length = 2), R issues a warning
+
+-   If the length of the longer vector (e.g., length = 4) is a multiple of the length of the shorter vector (e.g., length = 2), R uses vector recycling (see below).
+
+```{r vector-recycling}
+# Please execute the commands: Can you explain what happens?
+c(1, 2, 3, 4) + c(1, 2)
+1:4 + 1:2
+
+# Vector recycling and scalars
+1:3 * 2
+c(1, 3, 8) + 2
+```
+
+| Operator | Definition               |
+|----------|--------------------------|
+| !        | Logical NOT              |
+| &        | Logical AND              |
+| \|       | Logical OR               |
+| \<       | Less than                |
+| \<=      | Less than or equal to    |
+| \>       | Greater than             |
+| \>=      | Greater than or equal to |
+| ==       | Logical equal            |
+| !=       | Not equal                |
+
+: Logical operators in R
+
+Logical operators return TRUE or FALSE. The logical operators are also **vectorized**.
+
+```{r logical-operators}
+# Some examples: Can you explain what happens here?
+2 > 1
+c(1, 3, 4) > c(3, 1, 2)
+c("a", "b", "c") == c("a", "c", "c")
+!TRUE
+!FALSE
+!(1 == 2)
+TRUE & TRUE
+FALSE & FALSE
+TRUE & FALSE
+TRUE | FALSE
+1 != 2
+TRUE != TRUE
+
+# A weirder example: Can you explain what happens here?
+TRUE > FALSE
+```
+
+## Task 2
+
+Can you write a command that tests whether the values of a numeric vector are even? The command should return a logical vector of equal length as the numeric vector, where TRUE indicates that the value is even and FALSE indicates that the value is uneven. (Tip: You must use the modulus %%!).
+
+```{r task-2}
+# Vector to test
+my.vec <- 1:10
+
+# Your command
+
+```
+
+
+## Subsetting
+
+There are many situations in which we only want specific subsets of a vector, e.g., only the even values of a numeric vector. The code below showcases several ways of subsetting vectors.
+
+```{r subsetting}
+# Vector to subset
+my.vec <- 10:1
+
+# Selection by index number (Note: R starts indexing at 1)
+my.vec[3]  # Select 3rd value
+my.vec[1:3]  # Select 1st to 3rd value
+my.vec[c(1, 3)]  # Select 1st and 3rd value
+my.vec[-1]  # Select everyhthing except the 1st value
+my.vec[-c(1:3)]  # Select everything except the first 3 values
+
+# Selection by logical vector (TRUE = select, FALSE = do not select)
+my.vec[c(TRUE, FALSE)]  # Select all values with uneven index number
+my.vec[my.vec == 2]  # Select all values that are equal to 2
+my.vec[my.vec %in% c(3, 6, 7)]  # Select all values equal to 3, 6, or 7
+
+# Selection by name
+names(x = my.vec) <- letters[1:length(x = my.vec)]  # Assign names
+my.vec["a"]  # Select by name
+
+# Caution: names need not be unique!
+my.vec <- 1:3
+names(my.vec) <- c("a", "a", "b")
+my.vec["a"]  # R selects only the first match
+my.vec[names(my.vec) == "a"]  # Selects all matches: Can you explain why?
+```
+
+## Task 3
+
+Please write the commands to accomplish the subsetting tasks described below.
+
+```{r task-3}
+# Vectors to subset
+my.num <- 21:34
+my.char <- c("apple", "pear", "orange", "carrot", "peach", "cucumber", "banana", "carrot")
+  
+# Part 1: Select the 4th to 7th value of my.num
+
+
+# Part 2: Select the 3rd, 6th, and 9th value of my.num
+
+
+# Part 3: Select all values equal to 21, 24, and 27
+
+
+# Part 4: Select everything but the last value of my.num
+
+
+# Part 5: Select all uneven values of my.num
+
+
+# Part 6: Select only the vegetables in my.char (carrot, cucumber)
+
+
+# Part 7: Select all values with an even index number in my.char
+
+```
+
+
+# Matrices and arrays
+
+Once you have mastered vectors, you are in a good position to understand matrices, arrays, and data frames because they are straightforward extensions of vectors.
+
+**Matrices** are two-dimensional arrays. You can imagine them as a set of column-vectors that are bound together. Just as vectors, matrices can only store **data of one type** (either numeric, character, or logical), not a mixture of types. **Arrays** are extensions of matrices to more than two dimensions.
+
+## Creating matrices
+
+Matrices are created with the matrix() command. You can use ?matrix to learn more about the command.
+
+```{r create-matrix-1}
+# Create empty matrix with 3 rows and 2 columns
+matrix(nrow = 3, ncol = 2)
+
+# Create matrix from vector: Make sure that nrow * ncol = length(vector)
+# Can you explain the difference between "byrow = FALSE" and "byrow = TRUE"?
+matrix(data = 1:9, nrow = 3, ncol = 3, byrow = FALSE)
+matrix(data = 1:9, nrow = 3, ncol = 3, byrow = TRUE)
+```
+
+Another option to create a matrix is to bind several vectors together. The command rbind() appends vectors row-wise. The command cbind() appends vectors column-wise.
+
+```{r create-matrix-2}
+# Create matrix through binding
+rbind(1:3, 4:6)
+cbind(1:3, 4:6)
+
+# Verify that the result is a matrix
+is.matrix(rbind(1:3, 4:6))
+class(rbind(1:3, 4:6))
+```
+
+## Task 4
+
+Please write a command that creates the following matrix.
+
+|     |     |     |
+|-----|-----|-----|
+| "a" | "d" | "g" |
+| "b" | "e" | "h" |
+| "c" | "f" | "i" |
+
+```{r task-4}
+
+```
+
+
+## Matrix attributes
+
+Like vectors, matrices also have attributes. The most important attributes are dim (dimensions: number of rows and columns) and dimnames (names for rows and columns).
+
+```{r matrix-attributes}
+# Create matrix
+my.mat <- matrix(data = 1:6, nrow = 3, ncol = 2, byrow = FALSE)
+
+# Get attributes of the matrix
+dim(x = my.mat)  # Output: number of rows, number of columns
+nrow(x = my.mat)  # Number of rows
+ncol(x = my.mat)  # Number of columns
+dimnames(x = my.mat)  # Currently, no names are assigned
+
+# Set attributes
+dim(x = my.mat) <- c(2, 3)  # Change dimensions (not recommended)
+my.mat  # Look at result
+dimnames(x = my.mat) <- list(rnames = c("a", "b"), cnames = c("a", "b", "c"))  # Assign names
+my.mat  # Look at results
+```
+
+## Subsetting a matrix
+
+As with vectors, we often want only a subset of values from a matrix. The logic and operators for subsetting matrices are the same as for vectors. The only difference is that we now **subset in two dimensions** (rows and columns). The syntax is matrix[row-selector, col-selector].
+
+```{r subset-matrix}
+# Named matrix to subset
+my.mat <- matrix(data = 1:6, nrow = 3, ncol = 2, byrow = FALSE)
+dimnames(x = my.mat) <- list(rnames = c("a", "b", "c"), cnames = c("a", "b"))
+
+# Selection by index number (Note: R starts indexing at 1)
+my.mat[3, 2]  # Select value from 3rd row, 2nd column
+my.mat[1:3, 1] # Select values in rows 1 to 3, 1st column
+my.mat[c(1, 3), 2]  # Select values in rows 1 and 3, 1st column
+my.mat[-1, 2]  # Select everything from the second column, except the value for the 1st row
+
+# Leaving it empty: Select entire row or column
+my.mat[, 1]  # Select all rows from 1st column
+my.mat[2, ]  # Select 2nd row across all columns
+
+# Selection by logical vector (TRUE = select, FALSE = do not select)
+my.mat[c(TRUE, FALSE, FALSE), c(FALSE, TRUE)]  # Select 1st row, 2nd column
+my.mat[my.mat > 1]  # Select all values greater than 1
+my.mat[my.mat[, 1] > 1, ]  # Select all rows (across all cloumns) for which the value in the first column is greater than 1
+
+# Selection by name
+my.mat["a", "b"]  # Select by name
+```
+
+## Matrix algebra
+
+R has build-in functions for matrix algebra: adding or subtracting matrices, scalar multiplication, matrix multiplication, transposition, inversion, and so on. You can find a list of the most common operators under: <http://www.philender.com/courses/multivariate/notes/matr.html>.
+
+# Data frames
+
+**Data frames** are a generalization of matrices. They have several neat features that make them particularly suitable for storing the sorts of data sets that social scientists typically work with.
+
+Most importantly, data frames can store data of **more than one type**. There are two requirements:
+
+-   Each column has the same length
+
+-   Each column stores only one data type
+
+## Creating data frames
+
+Data frames are usually created with the data.frame() command that combines multiple vectors or matrices that have the same number of rows. It is also possible to translate a single vector or matrix into a data frame with the as.data.frame() command.
+
+```{r create-df}
+# Create data frame with data.frame(): Provide column names with "colname ="
+my.df <- data.frame(col1 = 1:4, col2 = letters[1:4], col3 = rep(x = c(TRUE, FALSE), times = 2))
+
+# Inspect result
+my.df
+
+# Check whether result is a data frame
+is.data.frame(x = my.df)
+class(x = my.df)
+
+# Create data frame with as.data.frame()
+my.df2 <- as.data.frame(x = my.mat)
+my.df2
+```
+
+## Subsetting a data frame
+
+You can subset a data frame in the same way as you would subset of matrix (see above). Data frames offer an additional convenient way to select a single column with the **\$ operator**. The syntax is dataframe\$colname.
+
+```{r subset-df}
+# Subsetting with $ operator
+my.df$col1
+```
+
+## Task 5
+
+**Part 1:** Please create a data frame named "task.df" with two columns. The first column should be named "id" and should contain the integer values from 1 to 10. The second column should be named "random" and should contain 10 draws from a uniform distribution with minimum = 0 and maximum = 1. (Tip: Use the runif() function! Find help with ?runif)
+
+The command set.seed() sets the seed for the random number generator so that we all will get the same results.
+
+**Part 2:** Select all rows in which the column "random" is greater than 0.5.
+
+```{r task-5}
+# Set seed
+set.seed(seed = 1234)
+```
+
+# Lists
+
+**Lists** are the most general data structure that we have encountered so far. They can store any combination of scalars, vectors, matrices, data frames, or other objects. Lists can even store other lists.
+
+## Creating lists
+
+Lists are created with the **list()** command. You should always name the elements of your list because this makes it much easier to access them later on.
+
+```{r create-list}
+# Create list with five named elements: a scalar, a vector, a matrix, a data frame, and a list
+my.list <- list(
+  my.sclr = "a",
+  my.vec = 1:10,
+  my.mat = matrix(data = 1:6, nrow = 3, ncol = 2, byrow = FALSE),
+  my.df = data.frame(id = 1:10, random = runif(n = 10, min = 0, max = 1)),
+  my.lst = list(el1 = "b", el2 = c(TRUE, FALSE))
+  )
+
+# Create the same list without naming the elements
+my.list2 <- list(
+  "a",
+  1:10,
+  matrix(data = 1:6, nrow = 3, ncol = 2, byrow = FALSE),
+  data.frame(id = 1:10, random = runif(n = 10, min = 0, max = 1)),
+  list("b", c(TRUE, FALSE))
+  )
+
+# Check whether result is a list
+is.list(my.list)
+class(my.list)
+```
+
+## Subsetting lists
+
+Subsetting lists can be a bit tricky at the start. There are two ways to subset lists
+
+-   With the [[]] operator (Note the double bracket!)
+
+-   With the \$ operator (If list elements are named)
+
+It is always advisable to first inspect the list in the console because R shows its basic structure.
+
+```{r subset-list}
+# Inspect the lists
+my.list
+my.list2
+
+# Subset with the [[]] operator
+my.list[[2]]  # Extracts the second list element (in our case: the numeric vector)
+my.list[[2]][1]  # Extracts the second list element (the vector) and than selects the first value of the vector
+my.list[[3]][1,2]  # Extracts the second list element (the matrix) and than selects the value in row 1, column 2
+
+# Subset with the $ operator
+my.list$my.sclr  # Extracts the list element with the name "my.sclr"
+my.list$my.vec[1:4]  # What does this command do?
+```
+
+## Task 6
+
+Please try to execute the following subsetting commands on our list "my.list". You can use the [[]] and the \$ operator.
+
+```{r task-6}
+# Extract the data frame and assign it to an object called "df"
+
+
+# Extract the 3rd value of the vector
+
+
+# Extract the second element from the list within my.list
+
+```
