@@ -1,5 +1,5 @@
 # Introduction-R
-The repository contains teaching materials for an introductory course to the statistical programming language R. It was first held in March 2023 at the University of Siegen (Germeny). The course is intended for students of Social Science with some basic knowledge of statistics. Prior experience with other statistical programming languages (e.g., STATA) is helpful but not required. The course is organized into four sessions and one homework:
+The repository contains teaching materials for an introductory course to the statistical programming language R. It was first held in March 2023 at the University of Siegen (Germany). The course is intended for students of Social Science with some basic knowledge of statistics. Prior experience with other statistical programming languages (e.g., STATA) is helpful but not required. The course is organized into four sessions and one homework:
 
 - Session 1: Introduction to R and R Studio; creation and manipulation of objects (vectors, matrices, data frames, and lists)
 - Session 2: Basic programming in R (if else structures, loops, writing own functions)
