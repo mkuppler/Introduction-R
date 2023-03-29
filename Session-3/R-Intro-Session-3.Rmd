@@ -1,0 +1,835 @@
+---
+title: "Introduction to R - Session 3^[Please do not circulate without permission from the author.]"
+author: "Matthias Kuppler^[Department of Social Sciences, University Siegen. Email: <matthias.kuppler@uni-siegen.de>.]"
+date: "Version: `r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    df_print: paged
+    number_sections: true
+---
+
+```{r setup, echo=FALSE}
+# Set code chunk options
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# Introductory comments
+
+Please note that the code introduced in sessions 3 and 4 is just my way of dealing with the typical tasks of data preparation, visualization, and analysis. It might not be the best way (if something like that even exists). It certainly is not the only way of accomplishing these tasks. It is always worthwhile to look (e.g., on [Stackoverflow](stackoverflow.com)) how others approach these tasks.
+
+The purpose of this document is to give you some basic recipes that you will need to adapt to your own projects. I hope that these recipes provide a solid foundation and save you some of the frustration that is necessarily associated with learning a new programming language.
+
+# Installing and loading packages
+
+## Installing packages
+
+Packages are installed with the command **install.packages()**. You only need to install a package once. If a new version of the package is published, you can update your installation by calling install.packages() again.
+
+The install.packages() command can only install packages from **CRAN** (Comprehensive R Archive Network). Very rarely, packages (or their most recent versions) are not available on CRAN. You can install those packages with the **devtools** package from other sources (e.g., GitHub). You can learn more about how to do this here: <https://r-coder.com/install-r-packages/>.
+
+The command **installed.packages()** returns a list of all packages that are installed on your current R configuration.
+
+The command below will install the Tidyverse package. The Tidyverse is a collection of functions for importing, preparing, visualizing, and modelling data. An excellent introduction to the Tidyverse is provided by Hadley Wickham and Garrett Grolemund (its programmers) in the free book *R for Data Science*: <https://r4ds.had.co.nz/index.html>.
+
+```{r install-package}
+# Install the tidyverse package
+install.packages("tidyverse")
+```
+
+## Loading packages
+
+Packages must be loaded into the current R session before they can be used. Packages are loaded with the **library()** command.
+
+Sometimes different packages use the same name for different functions. In this case, the package that is loaded later **"masks"** the functions of the packages that are loaded earlier. R issues a warning when this happens.
+
+One way around this problem is to load one of the packages only locally (i.e., just for one command). This is done with the "::" operator. The syntax is: package.name::function.name.
+
+```{r load-package}
+# Load tidyverse (notice the warnings issued by R: tidyverse masks some functions of base R)
+library(tidyverse)
+
+# Load function locally (here: to access their help file)
+?stats::filter()
+```
+
+## Task 1
+
+Please install the packages "haven" and "readxl" from CRAN. The "**haven**" package contains functions to import data from non-standard data file formats (e.g., STATA's .dta format). The "**readxl**" package allows you to import Excel's native .xlsx files. Please also load the packages after installing them.
+
+```{r task-1}
+# Install package
+
+# Load package
+
+```
+
+# Project management: File directories
+
+Per default, R sets the working directory to the folder in which the Script or Notebook is stored. The working directory is the folder where R looks for any files you might want to import.
+
+You can see your current working directory with the getwd() command. You can change the working directory for your current session with the setwd() command. In RMarkdown, you set the working directory with **knitr::opts_knit\$set(**root.dir = "Your/Directory/"**)**, where you have to replace "Your/Directory" with your chosen working directory.
+
+**Note:** R requires forward slashes ("/") for the file paths. Windows uses backward slashes ("\\"). You have to replace backward with forward slashes if you copy the paths from within Windows.
+
+## Recommended folder structure
+
+For reproducible research, I recommend to use the following folder structure:
+
+-   Create one folder for each data analysis project (*project folder*)
+
+-   Place your code file in the project folder
+
+-   Within the project folder, create subfolders for the original data (*odata*), processed data (*pdata*), and output like figures and tables (*output*)
+
+For this session, I already created the folder structure. If you have downloaded the .zip folder for this session, you should have everything ready to go.
+
+# Importing data
+
+Depending on the format of the file that contains the data, you need different functions to read-in the data. Luckily, the names of all these functions start with "**read**".
+
+The code below showcases different functions to import data from simple **text files** (.txt and .csv), **Excel** files (.xls and .xlsx), and **STATA** files (.dta).
+
+All functions require that you specify the **path** to the folder in which the data are stored. We only need to provide the **relative path** to the file, that is: Only the path that comes after the working directory. This is done by typing "./odata/name-of-data.file-type". The "." acts as a placeholder for the working directory.
+
+## Importing from text files
+
+The function to import from text files is **read.table()**. The basic syntax is read.table(file, header = TRUE, sep). The *file* option specifies the path to the folder in which the data are stored. The option *header = TRUE* tells the function that the first row of entries contains variable names.
+
+The *sep* option specifies the **separator** by which values are distinguished from each other. In tab-separated files (.tsv), values are separated by a tab (in R: "\t"). In comma-separated files (.csv), values are separated by a comma (","). Other separators are possible (e.g., a colon or semicolon). The best way to find out the separator for a specific data file is to open the file in the Windows"Editor" app (or the equivalent app under Mac and Linux).
+
+The *dec* option allows you to specify the character that is used for the **decimal points**. Most **European** data sets use the comma (",") as the decimal signs and the semicolon (";") as the separator. **English** data sets tend to use a point (".") as the decimal sign and the comma (",") as the separator. Be careful to specify the correct separator and decimal characters for your data set! R has two convenience functions for importing .csv files: **read.csv()** for the English way and **read.csv2()** for the European way.
+
+There are many **additional options** to read.table(). Type ?read.table in the console to view all options in the Help window.
+
+```{r import-txt}
+# Import from simple text files (.txt, .csv)
+df1 <- read.table(
+  file = "./odata/Example-Data.txt",
+  header = TRUE,
+  sep = "\t"
+  )
+
+# European
+df2 <- read.table(
+  file = "./odata/Example-Data.csv",
+  header = TRUE,
+  sep = ";",
+  dec = ","
+  )
+
+# European
+df2 <- read.csv2(
+  file = "./odata/Example-Data.csv",
+  header = TRUE
+  )
+
+# English
+df3 <- read.table(
+  file = "./odata/Example-Data-CSV.txt",
+  header = TRUE,
+  sep = ",",
+  dec = "."
+  )
+
+# English
+df3 <- read.csv(
+  file = "./odata/Example-Data-CSV.txt",
+  header = TRUE
+  )
+
+# An error (European way applied to English file)
+df4 <- read.table(
+  file = "./odata/Example-Data-CSV.txt.",
+  header = TRUE,
+  sep = ";",
+  dec = ","
+  )
+```
+
+## Importing from Excel
+
+The function to read-in Excel files is **read_excel().** The basic syntax is read_excel(path, sheet, col_names = TRUE). The *path* option sets the path to the folder in which the data are stored. The *sheet* option lets you choose the sheet in the Excel workbook where the data lies (e.g., sheet = 1 for the first sheet, the default). The *col_names = TRUE* option tells R that the first row contains column names.
+
+There are additional options that you can access by typing ?read_excel in the console.
+
+```{r import-xlsx}
+# Import from Excel
+df5 <- read_excel(path = "./odata/Example-Data.xlsx", sheet = 1, col_names = TRUE) # Explicit sheet select
+df5 <- read_excel(path = "./odata/Example-Data.xlsx", col_names = TRUE) # Default sheet select
+df6 <- read_excel(path = "./odata/Example-Data.xlsx", col_names = FALSE) # An error
+```
+
+## Importing from STATA
+
+The function to import data from STATA is **read_stata().** It has a very simple syntax: read_state(file). Again, there are additional options that you can access via ?read_stata.
+
+The code loads the ALLBUS 2021. The data set has 544 columns, much more than we need. The Tidyverse verb "select" is used to select the subset of columns that we will use later on to demonstrate data preparation and analysis in R.
+
+```{r import-dta}
+# Import from STATA
+df7 <- read_stata(file = "./odata/ZA5280_v2-0-0.dta")
+
+# Select columns
+df7 <- df7 %>% 
+  select(
+    respid,  # ID
+    di01a,   # Income (cont)
+    incc,    # Income (cat)
+    hhincc,  # Household income
+    age,     # Age (cont)
+    iscd11,  # Education (ISCED 2011)
+    sex,     # Sex
+    mstat,   # Marital status
+    work,    # Employment status
+    german,  # German citizenship
+    dn07,    # Born in Germany?
+    pa01     # Political leaning
+    )
+```
+
+## Writing to disc
+
+R can save data sets in all kinds of formats. It is recommended, however, to **save data in human-readable text files**. Specific formats (.dta, .xlsl, ...) and the software to process them may come and go. But: It will always be possible to open simple text files.
+
+The command to save data sets is **write.table()**. The basic syntax is write.table(x = data.object, file, sep, col.names = TRUE). The *data.object* stands for the name of the R object in the environment that you want to save. The other options are defined as above.
+
+**Note:** You have to specify a name for the file as well as its format. In the code below the name of the file is "ALLBUS-2021-Selection" and the format is ".txt".
+
+The code below saves the subset of the ALLBUS data set that we created above. Note that we save the data in the *pdata* sub-folder. Have a look at the folder to check if the saving was successful.
+
+```{r save-txt}
+# Save ALLBUS subset
+write.table(
+  x = df7,
+  file = "./pdata/ALLBUS-2021-Selection.txt",
+  sep = "\t",
+  col.names = TRUE
+  )
+```
+
+R can also save other types of objects (e.g., functions, lists) in its native RDS-format. The functions to read (import) and write (save) such objects are: **readRDS()** and **saveRDS().**
+
+```{r save-objects}
+# Create list and function to export
+my.fun <- function(x){
+  return(
+    x^2
+  )
+}
+my.list <- list(char = letters, num = 1:10)
+
+# Save list and function
+saveRDS(object = my.fun, file = "./pdata/Function-R-Intro.RDS")
+saveRDS(object = my.list, file = "./pdata/List-R-Intro.RDS")
+
+# Import list and function
+my.fun2 <- readRDS(file = "./pdata/Function-R-Intro.RDS")
+my.list2 <- readRDS(file = "./pdata/List-R-Intro.RDS")
+```
+
+# Factors
+
+Nominal (unordered categorical, e.g., gender) and ordinal (ordered categorical, e.g., educational level) variables are represented as **factors** in R. Factors are an additional type of data, besides numeric, character, and logical. Factors are most easily handled with the **forcats** package that comes with the Tidyverse (see chapter 15 in *R for Data Science*).
+
+## Creating factors from scratch
+
+The function to create factors is **factor()**. The basic syntax is factor(x, levels, labels). The option *x* is a vector that contains the variable that we want to transform into a factor. The option *levels* requires a vector with all the different values (observed and unobserved) that x can take. The option *labels* requires a character vector that contains the names of each level. To view additional options, type ?factor in the console.
+
+**Note:** Values of x that are not included in the levels option will be converted to missing (NA).
+
+**Note:** Unless specified differently, factor() orders the levels in the order specified in the levels option. Setting the option *ordered = FALSE* creates an unordered factor.
+
+The example below creates a factor with all the months of the year.
+
+```{r create-factor}
+# Factor levels (including those not in my.fac)
+months.levels <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+# Create factor
+my.fac <- factor(
+  x = c("Feb", "Jan", "Sep", "Dec"),
+  levels = months.levels,
+  labels = months.levels
+  )
+
+# Inspect factor
+my.fac
+
+# Check whether result is a factor
+class(my.fac)
+is.factor(my.fac)
+```
+
+## Creating factors from categorical vector
+
+The as.factor() function is a shortcut to convert the vector of a categorical variable to a factor. The syntax is as.factor(x). The function automatically declares all observed values of x as factor levels.
+
+```{r convert-to-factor}
+# Convert vector to factor
+as.factor(x = 1:5)
+as.factor(x = letters[5:1])
+as.factor(x = c(TRUE, FALSE, TRUE))
+```
+
+## Creating factors by categorizing a continuous variable
+
+We frequently want to convert a continuous variable (e.g., age or income) into distinct categories (e.g., age or income groups). R offers two solutions: **ifelse()** and **cut()**. Both solutions are demonstrated below.
+
+The **ifelse(**condition, value-of-true, value-if-false**)** function performs a logical test (*condition*) and assigns the first value (*value-if-true*) if the test evaluates to TRUE and the second value (*value-if-false*) if the test evaluates to FALSE. The ifelse function is vectorized.
+
+The **cut()** function divides the continuous variable into disjoint intervals. The basic syntax is **cut(x = cont.vector, breaks, labels)**. The *breaks* option can either be a single number (indicating the number of intervals into which x is cut) or a numeric vector (indicating the start and end points of the intervals). The *labels* option lets you specify labels for the newly created levels.
+
+**Example:** If you provide a numeric vector c(0, 5, 10) to *breaks*, R creates two levels: (0,5] and (5,10]. The parenthesis "(" stands for the open interval, the bracket "]" for the closed interval. That means: The interval is open on the left and closed on the right. The open interval excludes the endpoints, the closed interval includes them. In the example, the first level comprises the values 1, 2, 3, 4, and 5 (notice that 0 is excluded but 5 is included). The second level comprises the values 6, 7, 8, 9, and 10. Note that the lowest value 0 is excluded. You can specify the option *include.lowest = TRUE* to include the lowest value (this option only applies to the lowest interval, otherwise the subsequent intervals would overlap).
+
+If you set option *right = TRUE*, R creates [0, 5) and [5, 10). The first level comprises the values 0, 1, 2, 3, and 4. The second level includes the values 5, 6, 7, 8, and 9. To include the highest value (here: 10) in the upper-most interval, set *include.lowest = TRUE* (not very intuitive but correct).
+
+See *?cut* for additional options.
+
+```{r cont-to-factor}
+# Continuous vector
+age <- sample(x = 1:100, size = 300, replace = TRUE)
+
+# Categorize with ifelse
+age.cat <- ifelse(age >= 0 & age <= 30, 1, NA)
+age.cat <- ifelse(age > 30 & age <= 60, 2, age.cat) # Important: Assign existing age.cat value in  cases where the condition is FALSE 
+age.cat <- ifelse(age > 60, 3, age.cat)
+
+age.cat
+
+# Categorize with cut (same result as above)
+age.cat <- cut(
+  x = age,
+  breaks = c(min(age), 30, 60, max(age)),
+  include.lowest = TRUE
+  )
+
+# Add labels
+age.cat <- cut(
+  x = age,
+  breaks = c(min(age), 30, 60, max(age)),
+  labels = c("1 to 30", "31 to 60", "61 and older"),
+  include.lowest = TRUE
+  )
+
+# cut (fixed number of intervals)
+age.cat <- cut(x = age, breaks = 3, include.lowest = TRUE)
+```
+
+Using cut() in combination with the **quantile()** function allows you to split the continuous variable at chosen percentiles. The code below splits the age variable at the 25th, 50th (median), and 75th percentile. Do not forget to include the 0th and 100th percentile so that R includes the lowest and highest values of x.
+
+```{r quantile-cut}
+# Cut at quantiles
+age.cat <- cut(
+  x = age,
+  breaks = quantile(x = age, probs = c(0, 1/4, 1/2, 3/4, 1)),
+  include.lowest = TRUE
+  )
+table(age.cat)
+```
+
+## Task 2
+
+The code below creates a data frame with artificial data. Please use cut() and/or factor() to:
+
+1.  Convert the column *sex* into a factor with the labels Male (if sex = 0) and Female (if sex = 1)
+
+2.  Categorize the column *income* into 10%-percentiles
+
+Please store the resulting new columns as new variables (*sex.cat*, *income.cat*). You can do this with my.df\$new.var \<- cut(...).
+
+```{r task-2}
+# Create data frame (artificial data)
+my.df <- data.frame(
+  # IDs
+  id = 1:1000,
+  # Sex (categorical)
+  sex = sample(x = 0:1, size = 1000, replace = TRUE),
+  # Income (continuous) from lognormal distribution
+  income = 1000 * rlnorm(n = 1000, meanlog = 0, sdlog = .5)
+)
+
+# Create factors
+
+```
+
+## Loading the ALLBUS
+
+In the following, we will work with the ALLBUS data set that we created above. The code below imports the data set.
+
+```{r import-allbus}
+# Load data
+df <- read.table(file = "./pdata/ALLBUS-2021-Selection.txt", sep = "\t")
+```
+
+## Examples
+
+The code below further illustrates the use of the cut() and/or factor() function. The functions are used to:
+
+1.  Categorize the age variable (*age*) of the ALLBUS into 5-year intervals: [0, 5], (5, 10], ...
+2.  Categorize the income variable (*di01a*) of the ALLBUS into 10%-percentiles
+3.  Convert the sex variable (*sex*) of the ALLBUS into a factor (level 1 = male, level 2 = female, level 3 = diverse)
+
+The **results are stored in new columns** (age.cat, inc.cat, and sex.cat) of the data frame *df*. You can do this with df\$age.cat \<- cut(...). If you want, you can assign labels to the levels.
+
+The somewhat awkward code *ceiling(max(df\$age, na.rm = TRUE) / 5) \* 5* is necessary to round-up to the next highest multiple of 5. For example, the code rounds 91 to 95 (rather than 90). Such rounding is necessary to make sure that all values of the continuous variable end up in one of the factor levels.
+
+**Note:** The command creates factor levels for values that are not observed in the data (e.g., [0, 5] and (5, 10]). The easiest way to get rid of these unused factor levels is to call factor() gain.
+
+**Note:** Missing values are coded as negative values in the ALLBUS. Unless we tell R otherwise, it treats these missing codes as actual numeric values. I declared the missing values before applying cut(). We will see later how to declare missing values in general.
+
+**Note:** The code for the categorization of the age and sex variable automatically declares all values that are not explicitly stated in the *levels* option as missing.
+
+```{r example-cat}
+# Part 1: age
+df$age.cat <- cut(
+  x = df$age,
+  breaks = seq(from = 0, to = ceiling(max(df$age, na.rm = TRUE) / 5) * 5, by = 5), 
+  include.lowest = TRUE
+  )
+df$age.cat <- factor(df$age.cat)  # Remove unused factor levels
+
+# Part 2: income
+## Declare missing values
+df[df$di01a == -50, ]$di01a <- 0  # Participant has no income
+df[df$di01a < 0, ]$di01a <- NA  # Missing values
+
+## Create factor
+df$inc.cat <- cut(
+  x = df$di01a,
+  breaks = quantile(
+    x = df$di01a,
+    probs = seq(from = 0, to = 1, by = .1),
+    na.rm = TRUE
+    ),
+  include.lowest = TRUE,
+  labels = c(
+    "0 to 10",
+    "11 to 20",
+    "21 to 30",
+    "31 to 40",
+    "41 to 50",
+    "51 to 60",
+    "61 to 70",
+    "71 to 80",
+    "81 to 90",
+    "91 to 100"
+    )
+  )
+
+# Part 3: sex
+df$sex.cat <- factor(
+  x = df$sex,
+  levels = 1:3,
+  labels = c("Male", "Female", "Diverse"),
+  ordered = FALSE
+  )
+```
+
+## Modifying factor order
+
+Sometimes, we want to **re-order the factor levels** (e.g., Female as level 1 and Male as level 2). There are several ways to modify the factor order:
+
+-   Call factor() again and change the levels and labels option
+-   fct_inorder() sorts factor levels according to their first appearance in the data (e.g., if the first observation is female, than level 1 = Female)
+-   fct_infreq() sorts factor levels by the number of observations within each level (largest first)
+-   fct_inseq() sorts factor levels by the numeric value of each level
+-   fct_rev() reverses the current order of factor levels
+-   fct_reorder(.f, .x, .fun = median) sorts the levels of a factor *.f* according to the values of a numeric vector *.x*; if there are multiple values of .x for each factor level, *.fun* calculates the median of these .x values and uses this value to sort the levels (other summary functions like mean are possible)
+-   fct_relevel(.f, ..., after = OL) is used to place a selection of levels (specified in place of "*..."*) at the position specified by *after* (default is 0L, i.e., at the first position)
+
+```{r factor-order}
+# Create simple factor
+my.fac <- factor(x = c(letters[5:1], letters[2:4]), levels = letters[1:5])
+my.num <- 1:length(my.fac)
+
+# Examples (look at "Levels:")
+fct_inorder(my.fac)
+fct_infreq(my.fac)
+fct_inseq(my.fac) # Does not work with character vector
+fct_rev(my.fac)
+fct_reorder(.f = my.fac, .x = my.num, .fun = median) # Sort by value in my.vec (note that b, c, d are associated with two values of which the median is taken)
+fct_relevel(.f = my.fac, "b", after = 0) # Look at the position of level b
+fct_relevel(.f = my.fac, "b", after = 3)
+factor(x = my.fac, levels = letters[5:1])
+```
+
+## Modifying factor levels
+
+We can also modify the factor levels themselves. This includes the assignment of better labels and the **re-coding** (or: collapsing) of multiple levels into one. The corresponding function is **fct_recode(.f)**. Below, we use this function to change the labels and levels of the categorical income variable that we created above.
+
+The syntax is *fct_recode(.f = my.fac, "new_level" = "old_level")*. Multiple old levels of my.fac can be assigned to the same new level.
+
+```{r factor-level}
+# Combine factor levels and assign new labels
+df$inc.cat2 <- fct_recode(
+  .f = df$inc.cat,
+  "Lowest 30%" = "0 to 10",
+  "Lowest 30%" = "11 to 20",
+  "Lowest 30%" = "21 to 30",
+  "Middle: 31 to 70%" = "31 to 40",
+  "Middle: 31 to 70%" = "41 to 50",
+  "Middle: 31 to 70%" = "51 to 60",
+  "Middle: 31 to 70%" = "61 to 70",
+  "Top 30%" = "71 to 80",
+  "Top 30%" = "81 to 90",
+  "Top 30%" = "91 to 100"
+  )
+
+# Check result
+table(df$inc.cat, df$inc.cat2)
+```
+
+# Declaring missing values
+
+R encodes missing values as **NA**. In most cases, R does not automatically detect missing values when data are imported. You can, however, use the *na.strings* option of read.table() to tell R which values should be interpreted as NA. This strategy fails if the missing codes differ across variables. In most cases, we have to declare missing values manually.
+
+To check whether a vector x has missing values, you can use the **is.na(x)** function. It returns a logical vector of the same length as x, where TRUE means missing and FALSE means non-missing.
+
+```{r check-missing}
+# Create vector
+my.vec <- c("A", NA, "B", "C", NA, "D")
+
+# Check missing
+is.na(x = my.vec)
+
+# Number of missing values (Remember: TRUE = 1, FALSE = 0)
+sum(is.na(x = my.vec))
+```
+
+We will use the **ifelse()** function to declare missing values. The Tidyverse offers a similar function called **na_if()** (see ?na_if for details). The code also uses additional Tidyverse functions (mutate and across) as well as the pipe operator (%\>%) that we will encounter later. The mutate() verb creates new columns by transforming existing columns of a data frame. The across() verb is used to apply a function across all columns of the data set (similar to the apply() function that we encountered in session 2).
+
+The Variable Report of the ALLBUS 2021 tells us the **codes** that are assigned to **missing values**.
+
+| Missing code | Definition                                                            |
+|--------------------|----------------------------------------------------|
+| -1           | Not collected (in the specific ALLBUS wave)                           |
+| -6           | Item not known to respondent                                          |
+| -7           | Refusal                                                               |
+| -8           | Don't know                                                            |
+| -9           | No answer                                                             |
+| -10          | Does not apply (filter)                                               |
+| -11 to -14   | Item was not presented to respondent                                  |
+| -32          | Unable to create (for variables that are derived from multiple items) |
+| -33          | Open answer unclear/not readable                                      |
+| -34          | Not in data set (e.g., to preserve privacy)                           |
+| -41          | Data error                                                            |
+| -42          | Data error                                                            |
+| -50 to -59   | Item-specific missing code (e.g., "no income" for incc)               |
+| -88          | Data lost                                                             |
+
+: Missing value codes
+
+Manual inspection of the variables in our data set shows that all negative values are indeed missing values. We have to be careful with the income variables (di01a, incc, and hhincc). For these variables, the code -50 indicates a specific type of missing: no own income.
+
+```{r declare-missing}
+# Define missing functions
+## For all variables 
+mis.decl <- function(x){
+  ifelse(x < 0, NA, x)
+}
+
+## For income variables
+mis.decl2 <- function(x){
+  ifelse(x == -50, 0, x)
+  ifelse(x < 0, NA, x)
+}
+
+# Apply function across columns of data set
+df <- df %>% mutate(across(c(respid, age:pa01), ~ mis.decl(.))) # Exclude income variables
+df <- df %>% mutate(across(di01a:hhincc, ~ mis.decl2(.))) # Only income variables
+```
+
+The code below creates a table with the number of missing values by variable. I will not explain this code in detail. If you want to use it in your own analyses, make sure to replace *df* with the name of your object that stores the data set.
+
+```{r table-missing}
+# Define function
+count.missing <- function(x){
+  return(sum(is.na(x)))
+}
+
+# Apply function to all columns (returns a named vector)
+miss.vec <- apply(X = df, MARGIN = 2, FUN = count.missing, simplify = TRUE)
+
+# Data frame with results
+miss.vec <- data.frame(
+  # Transform named vector into data frame
+  keyName = names(miss.vec),
+  value = miss.vec,
+  row.names = NULL
+  ) %>% 
+  # Give more intuitive column names
+  rename(
+    variable = keyName,
+    mis.count = value
+    ) %>% 
+  # Compute the share of missing values (in %)
+  mutate(
+    mis.perc = round(mis.count / nrow(df) * 100, digits = 2)
+    )
+
+# Display data frame as table
+knitr::kable(
+  x = miss.vec,
+  format = "markdown",
+  col.names = c("Variable", "N", "%"),
+  caption = "Missing values"
+  )
+```
+
+# Data preparation: The dplyr package
+
+The **dplyr package** is a core member of the Tidyverse. It introduces five **verbs** (filter, select, arrange, mutate, and summarize) that cover almost all data transformation tasks that you usually encounter. You can learn more about these verbs in Chapter 5 of *R for Data Science* [(link)](https://r4ds.had.co.nz/transform.html).
+
+All five verbs have the **same structure**: verb(.data, ...), where *.data* is a data frame and *...* contains arguments that specify what is done to the data frame. The input and the output of the verbs is always a data frame.
+
+**Note:** The verbs only work on data frames (and tibbles -- a Tidyverse version of data frames).
+
+The dplyr package also includes **additional functions** that we will not talk about in this workshop. Here are some noteworthy ones:
+
+-   Mutating joins: Mutating joins add columns from y to x, matching rows based on a key variable (see ?`mutate-joins`)
+-   Transforming data sets from wide to long format (and vice versa) with pivot_longer() and pivot_wider()
+-   Renaming your columns with rename(.data =, new.name = old.name)
+
+## Filter: Subset rows using column values
+
+The **filter(**.data, cond**)** verb lets you select all rows (i.e., observations) that satisfy the condition *cond*. The condition is a logical test on the column values associated with the row. The logical test is formulated with the logical operators that we learned about in Session 1.
+
+| Operator | Definition               |
+|----------|--------------------------|
+| !        | Logical NOT              |
+| &        | Logical AND              |
+| \|       | Logical OR               |
+| \<       | Less than                |
+| \<=      | Less than or equal to    |
+| \>       | Greater than             |
+| \>=      | Greater than or equal to |
+| ==       | Logical equal            |
+| !=       | Not equal                |
+
+: Logical operators in R
+
+For instance, we use filter() to select all rows for which the income variable is non-missing or all rows for which age is higher than 25.
+
+```{r filter-1}
+# Select rows for which age > 25
+filter(.data = df, age > 25)
+
+# Select rows for which incc is non-missing
+filter(.data = df, !is.na(incc))
+```
+
+Using the logical operators, you can chain together multiple conditions.
+
+```{r filter-2}
+# Combine conditions
+filter(.data = df, age > 25 & age < 75) # All respondents between 26 and 74 years
+filter(.data = df, age %in% 26:74) # Same result
+filter(.data = df, age == 25 | age == 50) # All respondents aged 25 or 50
+filter(.data = df, age == 25, incc > 10) # Conditions on multiple columns (& instead of "," would work too)
+```
+
+The simplest way to get rid of all rows with a missing value on at least one column (i.e., listwise deletion) is **na.exclude()** from Base R. The **filter()** verb is useful for more complicated selections.
+
+**Note:** Be careful before you use na.exclude! You should remove all columns that you are not interested in before using this function. Otherwise, you might unnecessarily delete rows.
+
+```{r na-remove}
+# Apply listwise deletion
+df.no.mis <- na.exclude(df)
+```
+
+## Task 3
+
+Please use the filter() verb to make the following selections of rows (participants) in the ALLBUS:
+
+-   Select only participants who are in some form of employment (work = 1, 2, and 3), thereby excluding all participants who are unemployed (work = 4)
+-   Select only participants with at least upper secondary education (iscd11 = 3 or higher)
+-   Select only participants who are German citizens (german = 1)
+
+```{r task-3}
+
+```
+
+## Select: Subset columns
+
+Data sets often come with way more variables than we need for our analysis. You can use **select**(.data, col.selector) to select a custom subset of these columns. The code below showcases the most common column selectors.
+
+**Note:** The select() also re-orders your columns in the order that they appear in the column selector.
+
+```{r select}
+# Select columns by name
+select(.data = df, respid, age)
+
+# Select all columns within a range
+select(.data = df, respid:sex)
+
+# Select all columns except age and sex
+select(.data = df, -c(age, sex))
+
+# Select all columns whose names begin with "inc"
+select(.data = df, starts_with("inc"))
+
+# Select all columns whose names end with "t"
+select(.data = df, ends_with("t"))
+
+# Select all columns whose names contain an "a"
+select(.data = df, contains("a"))
+```
+
+## Task 4
+
+Please select the following columns and store them in a new object called "df.small": respid, age, german, sex.
+
+```{r task-4}
+
+```
+
+## Arrange: Sort rows by column values
+
+The **arrange**(.data, col.names) verb sorts rows in a data frame by the values of one ore more columns. If you provide more than one column name, each additional column will be used to break ties in the values of preceding columns.
+
+By default, arrange() sorts rows in ascending order (lowest to highest value). You can use desc(col.name) to sort rows in descending order (highest to lowest value). Missing values are always sorted to the end.
+
+```{r arrange}
+# Sort by age in descending order
+arrange(.data = df.small, desc(age))
+
+# Sort by age and break ties by sex
+arrange(.data = df.small, desc(age), sex)
+```
+
+## Mutate: Add new columns
+
+The **mutate()** verb allows you to add new columns that are functions are existing columns. You can use unitary operators, mathematical operators, logical operators, and many more operators to create new functions. See Chapter 5.5 in *R for Data Science* [(link)](https://r4ds.had.co.nz/transform.html#add-new-variables-with-mutate) for a fuller list of operators. The syntax is: **mutate(**.data, new.col = function_of_old_col**)**.
+
+```{r mutate}
+# Number of columns before mutate
+ncol(x = df)
+
+# Create new columns
+df <- mutate(
+  .data = df,
+  #  Employment status
+  emp.cat = factor(
+    ifelse(work %in% 1:3, 0, 1),
+    levels = 0:1,
+    labels = c("Employed", "Unemployed")
+    ),
+  # Normalized age
+  age.norm = age - mean(age, na.rm = TRUE),
+  # You can refer directly to new columns
+  age.norm = round(age.norm, digits = 2),
+  # Squared age
+  age.sqr = age ^ 2
+  )
+
+# Number of columns after mutate
+ncol(x = df)
+```
+
+## Task 5
+
+Please use mutate() to create the following new columns:
+
+-   inc.log: The natural logarithm of the column di01a
+-   pol.cat: A factor for the respondent's political leaning, derived from the column *pa01* via the following mapping
+
+| pol.cat (factor levels) | pa01 (integer values) |
+|-------------------------|-----------------------|
+| Left                    | 1, 2                  |
+| More left than right    | 3, 4, 5               |
+| More right than left    | 6, 7, 8               |
+| Right                   | 9, 10                 |
+
+: Mapping pol to pol.cat
+
+```{r task-5}
+
+```
+
+## Summarize
+
+The **summarize(**.data**)** verb calculates summary statistics for the entire data frame. Chapter 5.6.4 of the *R for Data Science* book [(link)](https://r4ds.had.co.nz/transform.html#summarise-funs) provides a list of useful summary functions (where x is a column in .data):
+
+-   Measures of central tendency: mean(x), median(x)
+-   Measures of spread: sd(x), IQR(x), mad(x)
+-   Measures of rank: min(x), max(x), quantile(x)
+-   Counts: n(x), sum(!is.na(x)), n_distinct(x)
+
+The summary() verb returns a data frame with a single row and one column per summary statistic that is calculated.
+
+```{r summarize}
+# Summary statistics
+summarize(
+  .data = df,
+  # Mean and SD of age
+  age.mean = mean(x = age, na.rm = TRUE),
+  age.sd = sd(x = age, na.rm = TRUE),
+  # Median and 90%-percentile of income
+  inc.med = median(x = di01a, na.rm = TRUE),
+  inc.top10 = quantile(x = di01a, probs = .9, na.rm = TRUE),
+  # Proportion of respondents with some post-secondary education
+  tert.prop = mean(iscd11 > 3, na.rm = TRUE)
+  )
+```
+
+**Note:** Do not confuse the dplyr verb *summarize()* with the Base R function *summary()*. The summary(x) function returns summary statistics (min, max, mean, median, number of missing values) for a numeric vector x.
+
+## The pipe %\>%
+
+Please write code to perform the following sequence of data transformations and store the results in a new data frame called df.ted:
+
+-   Select the following columns: respid, age, sex, german
+-   Filter rows for which age \> 25
+-   Create a new column with the normalized age (age.norm)
+-   Compute the minimum and maximum of the normalized age
+
+```{r task-pipe}
+
+```
+
+How TEDious was this task? Did you grow tired of typing df.ted again and again? I sure did!
+
+Luckily, the Tidyverse introduced the pipe operator **%\>%** that allows you to chain together a sequence of dplyr verbs. This works because each dplyr verb takes a data frame as an input and returns a data frame as an output. The **shortcut** for the pipe operator is **ctrl shift m** (on Windows) and **cmd shift m** (on Mac).
+
+The sequence of commands is read from left to right, top to bottom.
+
+```{r pipe}
+# The same transformation as above
+df.ted <- df %>% 
+  select(respid, age, sex, german) %>% 
+  filter(age > 25) %>% 
+  mutate(age.norm = age - mean(age, na.rm = TRUE)) %>% 
+  summarize(
+    min.age = min(age.norm, na.rm = TRUE),
+    max.age = max(age.norm, na.rm = TRUE)
+  )
+```
+
+## Grouped summaries
+
+The true power of the **summarize()** verb is unlocked once it is combined with the **group_by()** function. The group.by(.data, col.names) function tells R that it should apply the all subsequent functions separately for each group identified by a unique combination of the columns specified under *col.names*.
+
+Use **ungroup(**.data**)** to tell R to stop applying functions separately to groups.
+
+The code below calculates the mean age for each of the 6 unique combinations of sex (male vs female) and citizenship (German vs German + other vs other).
+
+**Note:** The order in which you specify the column names is important. In the example below, R groups first by sex and then, within each sex group, by citizenship.
+
+**Note:** Each time summarize() is called, one grouping-layer is peeled away. After calculating the mean age, the data frame is only grouped by sex -- the grouping by citizenship is peeled away.
+
+```{r group_by}
+df %>% 
+  group_by(sex, german) %>% 
+  summarize(age.mean = mean(age, na.rm = TRUE))
+```
+
+## Task 6
+
+Please use group_by to calculate the median of income (di01a) by
+
+-   employment status (work)
+-   political leaning (pol.cat)
+
+```{r task-6}
+
+```
