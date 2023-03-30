@@ -1,0 +1,86 @@
+---
+title: "Introduction to R - Session 4(Solution)^[Please do not circulate without permission from the author.]"
+author: "Matthias Kuppler^[Department of Social Sciences, University Siegen. Email: <matthias.kuppler@uni-siegen.de>.]"
+date: "Version: `r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    df_print: paged
+    number_sections: true
+---
+
+```{r setup-chunks, echo=FALSE}
+# Set code chunk options
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# Task 1
+
+Please install and load all five required packages.
+
+```{r solution-1}
+# Clear all
+rm(list = ls())
+
+# Install packages
+install.packages("ggpubr")
+install.packages("vtable")
+install.packages("modelsummary")
+install.packages("dotwhisker")
+
+# Load packages
+library(tidyverse)
+library(ggpubr)
+library(vtable)
+library(modelsummary)
+library(dotwhisker)
+```
+
+# Task 2
+
+Please load the two ALLBUS data sets (df.pol and df.inc) that you prepared in the homework for this session. Before tryting to load the data sets, you should copy them into the pdata sub-folder for session 4.
+
+```{r solution-2}
+# Load data
+df.pol <- read.table(file = "./pdata/ALLBUS-2021-Polit.txt", sep = "\t", header = TRUE)
+df.inc <- read.table(file = "./pdata/ALLBUS-2021-Income.txt", sep = "\t", header = TRUE)
+```
+
+# Task 3
+
+Now that you know the recipes, let's get cooking! Take some time to create plots with the ALLBUS data sets that we have created in the homework. Feel free to raise your hand if you encounter a problem.
+
+If you want to know which aesthetics (size, color, ...) are accepted by GEOM_FUNCTION, scroll down to the **Aesthetics** section in the associated help file (accessed via, e.g., ?geom_point).
+
+```{r task-3}
+
+```
+
+# Task 4
+
+The *output* sub-folder for Session 4 contains the HTML-file (called "Summary-Table.html") of a summary table for the df.inc data set. Please write the code that generates this table.
+
+```{r solution-4}
+# Labels
+labs <- data.frame(
+  inc = "Income, monthly",
+  log.inc = "Log. income",
+  rght = "Right-leaning?",
+  age = "Age (in years)",
+  sex = "Sex"
+)
+
+# Summary table
+sumtable(
+  data = df.inc,
+  vars = colnames(df.inc)[2:5],
+  summ = c("notNA(x)", "mean(x)", "sd(x)"),
+  summ.names = c("N", "Mean", "SD"),
+  group = "sex",
+  group.long = FALSE,
+  group.test = TRUE,
+  digits = 3,
+  labels = labs,
+  out = "viewer",
+  file = "./output/Summary-Table.html"
+)
+```

@@ -1,0 +1,985 @@
+---
+title: "Introduction to R - Session 4^[Please do not circulate without permission from the author.]"
+author: "Matthias Kuppler^[Department of Social Sciences, University Siegen. Email: <matthias.kuppler@uni-siegen.de>.]"
+date: "Version: `r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    df_print: paged
+    number_sections: true
+---
+
+```{r setup-chunks, echo=FALSE}
+# Set code chunk options
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# Setup
+
+## Install and load packages
+
+For this session, we need the Tidyverse. In addition, we will use the following packages:
+
+-   ggpubr: Adds additional functionality to Tidyverse's ggplot function (in particular, it allows you to combine multiple plots)
+-   vtable: Provides a convenient function to construct tables with summary statistics
+-   modelsummary: Creates publication-ready regression tables
+-   dotwhisker: Draws dot-whisker plots to visualize regression results
+
+For most of these additional packages, only the most basic usage is illustrated. I will provide links to vignettes that introduce the packages in more detail.
+
+## Task 1
+
+Please install and load all five required packages.
+
+```{r task-1}
+# Clear all
+rm(list = ls())
+
+# Install packages
+
+# Load packages
+
+```
+
+## Task 2
+
+Please load the two ALLBUS data sets (df.pol and df.inc) that you prepared in the homework for this session. Before tryting to load the data sets, you should copy them into the pdata sub-folder for session 4.
+
+```{r task-2}
+
+```
+
+# Data visualization with ggplot()
+
+Base R has extensive graphing functionality. But there are good reasons why many users choose the **ggplot()** package instead:
+
+-   It is based on the Grammar of Graphics, a systematic way to describe any type of plot
+-   It is a core member of the Tidyverse and integrates well with the other Tidyverse functions
+-   It has nice defaults but also offers a lot of room for customization
+
+Chapter 3 of *R for Data Science* [(link)](https://r4ds.had.co.nz/data-visualisation.html#data-visualisation) offers a good general introduction to ggplot(). In this section, we will learn two things:
+
+1.  The grammar of graphics
+2.  Recipes for common plotting scenarios
+
+## Grammar of graphics
+
+The pseudo-code below shows the basic template for creating graphs with ggplot(). The terms in \<...\> are the seven key components of the grammar of graphics.
+
+<!-- -->
+
+```         
+ggplot(data = <DATA>) +
+  <GEOM_FUNCTION>(
+    mapping = aes(<MAPPINGS>),
+    stat = <STAT>,
+    position = <POSITION>
+  ) +
+  <COORDINATE_FUNCTION> +
+  <FACET_FUNCTION>
+```
+
+-   DATA is a data frame that contains the variables that we want to plot
+-   STAT is a statistical transformation applied to the variable to transform it into the information that you want to display (e.g., stat_count() for a bar chart or stat_identity() to do nothing)
+-   GEOM_FUNCTION (for geometrical object) specifies how the information is displayed (e.g., as a bar, a point, a line, ...)
+-   MAPPINGS relate variables to the parameters (called *aes*thetics) of a GEOM_FUNCTION (the point geom, e.g., has the x and y parameters to set the position of the point in a 2-dimensional coordinate system)
+-   COORDINATE_FUNCTION selects a coordinate system to place the geoms into (in most cases: Cartesian coordinate system)
+-   POSITION allows you to adjust the position of the geom in the coordinate system
+-   FACET_FUNCTION allows you to split the graph into subplots (an operation called "faceting")
+
+It is usually not necessary to manually specify all seven components. In most application, it suffices the specify DATA, GEOM_FUNCTION, and MAPPINGS.
+
+The figures below (directly taken from Chapter 3 of *R for Data Science* [[link](https://r4ds.had.co.nz/data-visualisation.html#the-layered-grammar-of-graphics)]) illustrate how the grammar of graphics works.
+
+![](./output/visualization-grammar-1.png) ![](./output/visualization-grammar-2.png) ![](./output/visualization-grammar-3.png)
+
+## ggplot() recipes
+
+The following sections present code templates for typical plotting scenarios and, in the process, introduce more and more of ggplot's functionality. If you are hungry for more recipes, check out the large collection of R graphs (along with the code to create them) in the R Graph Gallery [(link)](https://r-graph-gallery.com/).
+
+The examples below use the *mtcars* data set that is included in Base R. The data set contains information about N = 32 different car models. To learn more about the data set, type *?mtcar*s in the console.
+
+### One categorical variable
+
+The code below creates a **Bar Plot** showing the number of car models (y-axis) with different amounts of cylinders (x-axis). The corresponding GEOM_FUNCTION is geom_bar. Use ?geom_bar to learn more.
+
+```{r bar-plot}
+# Very basic (specify only data, geom_functino, and mapping)
+ggplot(data = mtcars) +
+  geom_bar(mapping = aes(x = cyl))
+
+# Proportions instead of counts (after_stat())
+ggplot(data = mtcars) +
+  geom_bar(mapping = aes(x = cyl, y = after_stat(prop)))
+
+# Flip coordinate system
+ggplot(data = mtcars) +
+  geom_bar(mapping = aes(x = after_stat(prop), y = cyl))
+
+# Overall nicer appearance
+ggplot(data = mtcars) +
+  geom_bar(mapping = aes(x = cyl, y = after_stat(prop))) +
+  # Set title and axis labels
+  labs(
+    title = "Share of car models by number of cylinders",
+    x = "Number of cylinders",
+    y = "Share"
+    ) +
+  # Set tick marks
+  scale_x_continuous(breaks = c(4, 6, 8)) +
+  # Nicer background
+  theme_bw()
+```
+
+### One continuous variable
+
+The code below creates a **Histogram**, **Frequency Polygon**, and a **Density Plot** of the car model's fuel efficiency (measured as miles per gallon). The corresponding GEOM_FUNCTIONS are geom_histogram, geom_freqpoly, and geom_density.
+
+**Note:** geom_histogram uses 30 bins per default. That is, the continuous variable is divided into 30 intervals of equal width. You can manually set the number of bins with the *bins* option and the bin width with the *binwidth* option.
+
+**Note:** The code below adds several aesthetics (e.g., color, fill, size) *outside* of aes(...). This lets you set the aesthetics manually. Putting the aesthetics *inside* aes(...) allows you to make them dependent on the values of another variable (something that we will explore below).
+
+**Note:** geom_density has several additional options that let you influence the smoothing algorithm. See *?geom_density* for more information.
+
+**Note:** When multiple GEOM_FUNCTIONs are called, they are plotted one over the other. GEOM_FUNCTIONs that are called later, are plotted over GEOM_FUNCTIONs that were called earlier.
+
+```{r histogram}
+# Basic (30 bins per default)
+ggplot(data = mtcars) +
+  geom_histogram(
+    mapping = aes(x = mpg)
+    )
+
+
+# Different number of bins
+ggplot(data = mtcars) +
+  geom_histogram(
+    mapping = aes(x = mpg),
+    # Color of the bars (aesthetic OUTSIDE aes())
+    fill = "grey60",
+    # Color of the border of the bars (aesthetic OUTSIDE aes())
+    color = "black",
+    bins = 10
+    )
+
+
+# Different bin width
+ggplot(data = mtcars) +
+  geom_histogram(
+    mapping = aes(x = mpg),
+    fill = "grey60",
+    color = "black",
+    binwidth = 5
+    ) +
+  scale_x_continuous(breaks = seq(from = 10, to = 35, by = 5))
+
+
+# Add a frequency polygon
+# Options that apply to all GEOM_FUNCTIONs can be placed in ggplot()
+ggplot(data = mtcars, mapping = aes(x = mpg)) +
+  # Set the color of the border (color) and the bars (fill)
+  geom_histogram(binwidth = 5, color = "red", fill = "green") +
+  # Add freqpoly and change the type, color, and width of the line
+  geom_freqpoly(binwidth = 5, linetype = "dashed", color = "blue", linewidth = 1) +
+  # Labels
+  labs(
+    title = "Histogram of miles per gallon (MPG)",
+    x = "MPG",
+    y = "Count"
+  ) +
+  # Adjust tick marks
+  scale_x_continuous(breaks = seq(from = 10, to = 35, by = 5)) +
+  theme_bw()
+
+
+# Add a density
+ggplot(data = mtcars) +
+  geom_histogram(
+    mapping = aes(x = mpg, y = after_stat(density)),
+    binwidth = 5,
+    color = "darkblue",
+    fill = "blue",
+    # Set opacity (0 = transparent to 1 = opaque)
+    alpha = .2
+    ) +
+  # Add density
+  geom_density(mapping = aes(x = mpg), size = .7) +
+  # Labels
+  labs(
+    title = "Histogram of miles per gallon (MPG)",
+    x = "MPG",
+    y = "Density"
+  ) +
+  scale_x_continuous(breaks = seq(from = 10, to = 35, by = 5)) +
+  theme_bw()
+
+
+# Add a normal density
+## For the legend (notice the color option in the mappings)
+colors = c("Empirical density" = "black", "Normal density" = "red")
+
+## Plot
+ggplot(data = mtcars) +
+  # Add histogram
+  geom_histogram(
+    # Set after_stat to density
+    mapping = aes(x = mpg, y = after_stat(density)),
+    binwidth = 5,
+    color = "darkblue",
+    fill = "blue",
+    # Set opacity (0 = transparent to 1 = opaque)
+    alpha = .2
+    ) +
+  # Add empirical density
+  geom_density(mapping = aes(x = mpg, color = "Empirical density"), size = .7) +
+  # Add normal density (with mean and sd of mpg)
+  geom_density(
+    data = data.frame(
+      # Draw from normal desnity with empirical mean and standard deviation
+      x = rnorm(n = 100000, mean = mean(mtcars$mpg), sd = sd(mtcars$mpg))
+      ),
+    mapping = aes(x = x, color = "Normal density"),
+    alpha = .3,
+    linetype = "dashed"
+    ) +
+  # Labels
+  labs(
+    title = "Histogram of miles per gallon (MPG)",
+    x = "MPG",
+    y = "Density"
+  ) +
+  # Adjust x-axis
+  scale_x_continuous(breaks = seq(from = 10, to = 35, by = 5)) +
+  # Overall nicer appearance
+  theme_bw() +
+  # Add legend
+  scale_color_manual(name = NULL, values = colors) +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+### Two categorical variables
+
+We might be interested in how the frequency distribution (Bar Plot) of one categorical variable differs across the different levels of a second categorical variable. We will accomplish this by playing around with the aesthetics *inside* aes(...) and the *position* option.
+
+The code below explores how the distribution of the number of cylinders differs across types of transmissions (am: automatic vs manual).
+
+**Note:** The code below works best if the categorical variables are declared as factors first. You also see that ggplot() can be included seamlessly with the pipe operator.
+
+**Note:** Position "dodge" places the bars for the different types of transmission besides one another. Position "fill" stacks the bars for the different transmission types on top of each other. For "dodge", the bars represent counts, for "fill" bars represent proportions.
+
+```{r two-cats}
+# Basic plot (with position "dodge")
+mtcars %>% 
+  # Transform into factors
+  mutate(
+    cyl.cat = factor(cyl),
+    am.cat = factor(am, levels = c("0", "1"), labels = c("Autom.", "Manual"))
+  ) %>% 
+  # Call ggplot (without data argument)
+  ggplot() +
+  # Tell ggplot to color the bars according to the value of am.cat
+  geom_bar(mapping = aes(x = cyl.cat, fill = am.cat), position = "dodge") +
+  # Assign title, axis labels, and legend title (here: via fill)
+  labs(
+    title = "Number of cylinders by transmission type",
+    x = "Number of cylinders",
+    y = "Count",
+    fill = "Transmission type"
+  ) +
+  # Set limits of y-axis
+  ylim(0, 15) +
+  # Nicer overall appearance
+  theme_bw() +
+  # Set position of legend (to remove legend: legend.position = "none")
+  theme(
+    legend.position = "bottom"
+  )
+
+# Basic plot (with position "fill")
+mtcars %>% 
+  mutate(
+    cyl.cat = factor(cyl),
+    am.cat = factor(am, levels = c("0", "1"), labels = c("Autom.", "Manual"))
+  ) %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = cyl.cat, fill = am.cat), position = "fill") +
+  labs(
+    title = "Number of cylinders by transmission type",
+    x = "Number of cylinders",
+    y = "Proportion",
+    fill = "Transmission type"
+  ) +
+  theme_bw() +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+### Two continuous variables
+
+The co-variation of two continuous variables is best visualized with a **Scatter Plot**. Below, we construct a Scatter Plot to investigate the co-variation of fuel efficiency (mpg) and weight in 1000 lbs (wt) of different car models. The GEOM_FUNCTION is geom_point.
+
+We will also fit a **line** to the data with geom_smooth. By default, geom_smooth adds a confidence interval around the fitted line. Setting *se = FALSE* removes the confidence interval.
+
+R has 24 different ways to display points. The figure below (directly taken from *R for Data Science*) provides a comprehensive list. You can change the appearance of points with the *shape* argument.
+
+![](./output/shapes-1.png)
+
+**Note:** If you have many data points (unlike in the mtcars data), there might be a lot of over-plotting because points with the same x and y coordinates are plotted exactly on top of each other. In this case, it is often helpful to set *alpha* (the opacity) to a low level and/or use *position = "jitter"* to displace each point by a small random amount.
+
+```{r two-cont}
+# Basic plot
+ggplot(data = mtcars) +
+  geom_point(mapping = aes(x = wt, y = mpg))
+
+# Change appearance of points
+ggplot(data = mtcars) +
+  geom_point(mapping = aes(x = wt, y = mpg), shape = 4, color = "red", size = 3, alpha = .8)
+
+# Add fitted line
+ggplot(data = mtcars, mapping = aes(x = wt, y = mpg)) +
+  geom_smooth(se = TRUE, linewidth = .8, color = "blue", alpha = .7) +
+  geom_point(color = "orange") +
+  labs(
+    title = "Scatter of miles per gallon (MPG) and weight",
+    x = "Weight (in 1,000 lbs)",
+    y = "MPG"
+  ) +
+  theme_bw()
+
+# Color points by type of transmission
+mtcars %>% 
+  # Transform transmission type into factor
+  mutate(
+    am.cat = factor(am, levels = c("0", "1"), labels = c("Autom.", "Manual"))
+  ) %>% 
+  # Call ggplot (without data argument)
+  ggplot(mapping = aes(x = wt, y = mpg)) +
+  # Add fitted line
+  geom_smooth(se = TRUE, linewidth = .8, color = "blue", alpha = .7) +
+  # Make sure to put color INSIDE aes(...)
+  geom_point(mapping = aes(color = am.cat)) +
+  # Add title and axis labels
+  labs(
+    title = "Scatter of miles per gallon (MPG) and weight",
+    x = "Weight (in 1,000 lbs)",
+    y = "MPG",
+    # Set legend title (based on aesthetic on which groups are distinguished)
+    color = "Transmission type"
+  ) +
+  theme_bw() +
+  theme(
+    legend.position = "bottom"
+  )
+
+# Fit separate line by transmission type
+mtcars %>% 
+  # Transform into factors
+  mutate(
+    am.cat = factor(am, levels = c("0", "1"), labels = c("Autom.", "Manual"))
+  ) %>% 
+  # Call ggplot (apply color INSIDE aes() to all GEOM_FUNCTIONs)
+  ggplot(mapping = aes(x = wt, y = mpg, color = am.cat)) +
+  geom_smooth(se = FALSE, linewidth = .8, alpha = .7) +
+  geom_point() +
+  labs(
+    title = "Scatter of miles per gallon (MPG) and weight",
+    x = "Weight (in 1,000 lbs)",
+    y = "MPG",
+    color = "Transmission type"
+  ) +
+  theme_bw() +
+  theme(
+    legend.position = "bottom"
+  )
+```
+
+### One continuous and one categorical variable
+
+The **Box Plot** is often used to show how the distribution of a continuous variable differs across the levels of a categorical variable. The GEOM_FUNCTION is geom_boxplot. The Box Plot conveys the following information:
+
+-   Median: Line in the middle of the box
+
+-   Quartiles: Lower end of the box is the 25%-percentile (1st quartile), the upper end the 75%-percentile (3rd quartile)
+
+-   Whiskers: Lower (upper) whisker extends from the lower (upper) end of the box to the lowest (highest) value no further than 1.5 \* IQR from the end of the box
+
+-   Outliers: Single points above and below the whiskers
+
+We will explore how fuel efficiency (mpg) differs across the type of transmission (am). In the mtcars data, there appear to be no outliers.
+
+```{r boxplot}
+# Basic boxplot
+mtcars %>% 
+  # Transform into factors
+  mutate(
+    am.cat = factor(am, levels = c("0", "1"), labels = c("Autom.", "Manual"))
+  ) %>% 
+  ggplot() +
+  # Add boxplot
+  geom_boxplot(mapping = aes(x = am.cat, y = mpg)) +
+  labs(
+    title = "Fuel effiency (MPG) by transmission type",
+    x = "Transmission type",
+    y = "Fuel efficiency"
+  ) +
+  theme_bw()
+```
+
+### Facets and combined plots
+
+**Facets** allow you to split up the figure into several plots based on the levels of one (or two) categorical variable. There are two options:
+
+-   *facet_wrap( \~ variable, nrow =, ncol =)* splits the figure based on the levels of one *variable* and lets you specify in how many rows and columns the sub-plots should be arranged
+
+-   *facet_grid(var1 \~ var2, rows =, cols=)* does the same but for two variables *var1* and *var2*
+
+```{r facets}
+# Illustrate facet_wrap()
+mtcars %>% 
+  mutate(
+    cyl.cat = factor(cyl),
+    am.cat = factor(am, levels = c("0", "1"), labels = c("Autom.", "Manual")),
+    vs.cat = factor(vs, levels = c("0", "1"), labels = c("V-shaped engine", "Straight engine"))
+  ) %>% 
+  ggplot() +
+  geom_bar(mapping = aes(x = cyl.cat, fill = am.cat), position = "dodge") +
+  labs(
+    title = "Number of cylinders by transmission and engine type",
+    x = "Number of cylinders",
+    y = "Count",
+    fill = "Transmission type"
+  ) +
+  ylim(0, 15) +
+  theme_bw() +
+  theme(
+    legend.position = "bottom"
+  ) +
+  # Add facet_wrap()
+  facet_wrap( ~ vs.cat, ncol = 2)
+
+# Illustrate facet_grid
+mtcars %>% 
+  mutate(
+    cyl.cat = factor(cyl, labels = c("4 Cylinders", "6 Cylinders", "8 Cylinders")),
+    am.cat = factor(am, levels = c("0", "1"), labels = c("Autom.", "Manual"))
+    ) %>%
+  ggplot() +
+  geom_histogram(mapping = aes(x = mpg)) +
+  labs(
+    title = "Histogram of fuel efficiency by number of cylinders and transmission type",
+    x = "Fuel efficiency (MPG)",
+    y = "Count"
+  ) +
+  theme_bw() +
+  # Add facet_grid()
+  facet_grid(am.cat ~ cyl.cat)
+```
+
+You can *combine plots* with the **ggarrange()** function from the ggpubr package. The basic syntax is ggarrange(plot1, plot2, ..., ncol =, nrow =). We will use this function to combine two boxplots. It is also possible to combine two different types of plots (e.g., a boxplot and a scatter plot) and more than two plots.
+
+```{r comb-plots}
+# Create plot 1
+p1 <- mtcars %>% 
+  # Transform into factors
+  mutate(
+    am.cat = factor(am, levels = c("0", "1"), labels = c("Autom.", "Manual"))
+  ) %>% 
+  ggplot() +
+  geom_boxplot(mapping = aes(x = am.cat, y = mpg)) +
+  labs(
+    title = "Fuel effiency (MPG)",
+    x = "Transmission type",
+    y = NULL
+  ) +
+  theme_bw()
+
+# Create plot 2
+p2 <- mtcars %>% 
+  # Transform into factors
+  mutate(
+    am.cat = factor(am, levels = c("0", "1"), labels = c("Autom.", "Manual"))
+  ) %>% 
+  ggplot() +
+  geom_boxplot(mapping = aes(x = am.cat, y = wt)) +
+  labs(
+    title = "Weight (in 1,000 lbs)",
+    x = "Transmission type",
+    y = NULL
+  ) +
+  theme_bw()
+
+# Combine plots
+p3 <- ggarrange(p1, p2, ncol = 2)
+p3
+```
+
+### Saving plots
+
+After you have finished your masterpieces, you certainly want to make sure that they find a nice home on your hard drive. The function *ggsave(filename =, plot =, ...)* will take care of that. You can save your plots in various formats, including: .png, .eps, .tex, .pdf, .jpeg, .svg, and some more. I prefer vector-based (.eps, .pdf, and .svg) over grid-based (.png and .jpeg) graphics because they look good at every level of magnification. Grid-based graphics, in contrast, have a fixed resolution.
+
+The code below saves the combined plot to the output sub-folder. Check the folder after you have executed the command to verify that the plot was saved successfully.
+
+```{r save-plots}
+# Save plot
+ggsave(filename = "./output/Combined-Boxplot.pdf", plot = p3, width = 7, height = 5)
+```
+
+## Task 3
+
+Now that you know the recipes, let's get cooking! Take some time to create plots with the ALLBUS data sets that we have created in the homework. Feel free to raise your hand if you encounter a problem.
+
+If you want to know which aesthetics (size, color, ...) are accepted by GEOM_FUNCTION, scroll down to the **Aesthetics** section in the associated help file (accessed via, e.g., ?geom_point).
+
+```{r task-3}
+
+```
+
+# Summary tables with sumtable()
+
+The **sumtable()** function from the vtable package is very convenient for the creation of summary tables. A vignette that explains the full functionality of the sumtable() function is provided [here](https://cran.r-project.org/web/packages/vtable/vignettes/sumtable.html).
+
+In principle, it is possible to construct very similar summary tables with the dplyr package (via the summarize and group:\_by verbs) and (in RMarkdown) the knitr::kable() function. The dplyr-way is more flexible but much more tedious. For most situations, sumtable() will be all that you need.
+
+## The default sumtable
+
+In the most basic call to sumtable(), you only have to supply the name of your data frame to the *data* option. The results are displayed in the viewer (lower right panel).
+
+The sumtable() function distinguishes numeric variables from characters, factors, and logicals. For the latter, it computes only the number of non-missing cases (N) and the proportion (Mean), separately for each level.
+
+```{r sumtable-1}
+# sumtable() without additional options
+sumtable(data = df.pol)
+```
+
+## Customizing your sumtable()
+
+### Selecting columns
+
+The *vars* option takes a character vector with the names of the columns that should be included. The order in which the column names are given determines the order in the sumtable. To view the column names of your data frame, use the colnames() function.
+
+```{r sumtable-2}
+# Select columns: vars option
+sumtable(data = df.pol, vars = c("age", "rght", "sex"))
+
+# Select columns: subsetting
+sumtable(data = df.pol[, 2:4])
+```
+
+### Selecting the summary statistics
+
+The *summ* option takes a character vector with the names of the summary statistics that should be reported in the table. Factor variables are ignored by most of these statistics (except notNA(x) and mean(x)). Some commonly used summary statistics are:
+
+-   Counts: notNA(x), countNA(x)
+-   Location: mean(x), median(x), pctile(x)[25], pctile(x)[75]
+-   Proportions: mean(x) (for factors), propNA(x)
+-   Variation: sd(x), min(x), max(x), mad(x), IQR(x)
+
+The *summ* option accepts any summary function that takes a vector as input and returns a single numeric value as its output.
+
+The sumtable() function usually correctly assigns a nice label to all summary statistics. If not, the *summ.names* option takes a character vector with the correct names for the summary statistics.
+
+```{r sumtable-3}
+# Summary statistics for age and income
+sumtable(
+  data = df.pol,
+  vars = c("age", "hhincc"),
+  summ = c("notNA(x)", "mean(x)", "sd(x)", "min(x)", "median(x)", "max(x)", "IQR(x)"),
+  summ.names = c("N", "Mean", "SD", "Min", "Median", "Max", "IQR")
+  )
+```
+
+### Summary statistics by group
+
+The *group* option takes the name of one column. If a column name is provided, the summary statistics are calculated separately for each level of the column.
+
+If *group.test = TRUE*, sumtable() performs an F-test (continuous variables) or chi2-test (categorical variables) to check whether the variable is significantly different across the levels of the grouping column.
+
+You can choose whether the statistics for the different groups are displayed horizontally (*group.long = FALSE*) or vertically (*group.long = FALSE*). Note that group.test is only available if group.long = TRUE.
+
+```{r sumtable-4}
+# Summary statistics by employment status
+sumtable(
+  data = df.pol[-1],
+  summ = c("notNA(x)", "mean(x)", "sd(x)"),
+  summ.names = c("N", "Mean", "SD"),
+  group = "emp",
+  group.long = FALSE,
+  group.test = TRUE
+)
+```
+
+### How many digits?
+
+The *digits* option lets you set the number of digits that should be displayed. Setting *fixed.digits = TRUE* means that trailing zeros are maintained (e.g., 2.00 rather than 2).
+
+```{r sumtable-5}
+# Summary statistics by employment status
+sumtable(
+  data = df.pol[-1],
+  summ = c("notNA(x)", "mean(x)", "sd(x)"),
+  summ.names = c("N", "Mean", "SD"),
+  group = "emp",
+  group.long = FALSE,
+  group.test = TRUE,
+  digits = 2,
+  fixed.digits = TRUE
+)
+```
+
+### How to display categorical variables?
+
+Set *factor.percent = FALSE* to report the proportion of observations (e.g., .5) instead of the percentage (e.g., 50%) for the values. Set *factor.counts = FALSE* to omit the count for the individual levels of the factor.
+
+Set *factor.numeric = TRUE* and/or *logical.numeric = TRUE* to ignore the special treatment for binary factor/logical variables and just treat each of the values as numeric binary variables. For me, the option only worked if variables were characters rather than factors.
+
+**Note:** The group.test is not affected by factor.numeric = TRUE. It will still calculate the chi2-test for the factors.
+
+```{r sumtable-6}
+# Summary statistics by employment status
+sumtable(
+  # Exclude respid column
+  data = df.pol[, -1],
+  summ = c("notNA(x)", "mean(x)", "sd(x)"),
+  summ.names = c("N", "Mean", "SD"),
+  group = "emp",
+  group.long = FALSE,
+  group.test = TRUE,
+  digits = 2,
+  factor.numeric = TRUE
+)
+```
+
+### Labelling the variables
+
+By default, sumtable() uses column names as the variable labels. The *labels* lets you set nicer labels.
+
+The vignette describes three different ways to set the labels. We will use the second approach ("labels as a one-row data set").
+
+```{r sumtable-7}
+# Data set with labels (col.name = "label")
+labs <- data.frame(
+  rght = "Right-leaning?",
+  age = "Age (in years)",
+  sex = "Sex",
+  east = "Residence in",
+  bger = "Born in Germany?",
+  mstat = "Marital status",
+  edu = "Education",
+  hhincc = "HH income",
+  rel = "Religion",
+  # Label for grouping variable
+  emp = "Employed?"
+)
+
+# Summary statistics by employment status
+sumtable(
+  data = df.pol[-1],
+  summ = c("notNA(x)", "mean(x)", "sd(x)"),
+  summ.names = c("N", "Mean", "SD"),
+  group = "emp",
+  group.long = FALSE,
+  group.test = TRUE,
+  digits = 2,
+  factor.numeric = TRUE,
+  # Add variable labels
+  labels = labs
+)
+```
+
+## Task 4 (Homework)
+
+The *output* sub-folder for Session 4 contains the HTML-file (called "Summary-Table.html") of a summary table for the df.inc data set. Please write the code that generates this table.
+
+```{r task-4}
+
+```
+
+# Regression models
+
+In empirical research, we often want to explain an **outcome Y** (also called: dependent variable) by modelling it as a linear combination of **explanatory variables X** (also called: independent variables). The goal is to estimate the **effects** $\beta$ of the explanatory variables on the outcome. We basically want to answer the question: How does the outcome change if we change one of the explanatory variables by one unit? The effect of an explanatory variable is exactly that: The amount of change in Y associated with a one-unit change in X.
+
+**Generalized Linear Models (GLMs)** offer a very flexible statistical framework to answer this type of question. The basic structure of these models is:
+
+$$
+E(Y|X_1, ..., X_k) = g^{-1}(\beta_0 + \beta_1 \times X_1 + ... + \beta_k \times X_k)
+$$
+
+where:
+
+-   $Y$ is the outcome (either continuous or categorical)
+
+-   $X_1$ to $X_k$ are the $j = 1, …, k$ explanatory variables
+
+-   $E(Y|X_1, ...)$ is the conditional mean of the outcome
+
+-   $\beta_1$ to $\beta_k$ are the $j = 1, …, k$ regression coefficients (or: effects) associated with the explanatory variables
+
+-   $g^{-1}(...)$ is the inverse of the distribution function of the outcome (also called: link function)
+
+Which distribution function is appropriate depends on the nature of the outcome. For continuous outcomes, it is usually assumed that they follow a **normal (Gaussian) distribution** and the **identity** link function is used. For binary outcomes, it is assumed that they follow a **binomial distribution** and the **logit** or **probit** link function is used.
+
+GLMs are fitted with a **Maximum Likelihood (ML)** estimator. The set of model parameters (the $\beta_j$) that maximize the likelihood are found with the **Iteratively Reweighted Least Squares (IRLS)** algorithm. The basic logic is: We want to find the model parameters that maximize the probability that the observed sample is generated by the model.
+
+Base R offers the powerful **glm()** function to estimate all kinds of generalized linear models. The basic syntax is: glm(formula, family, data), where:
+
+-   formula requires a *formula object* of the form: outcome \~ X1 + X2 + ...
+
+-   family requires the distribution and link function; we will use *gaussian(link = "identity")* for continuous outcomes and *binomial(link = "logit")* for categorical outcomes
+
+-   data requires a data frame
+
+The right-hand side of the formula object allows the following operators:
+
+-   "+ X" to include variable X
+
+-   "- 1" to remove the intercept $\beta_0$
+
+-   "+ X:Z" to include the interaction of X and Z
+
+-   "+ X \* Z" to include X, Z, and the interaction of X and Z
+
+-   "+ I(...)" to include some statistical transformation of an explanatory factor (e.g., I(X\^2) for the squared value of X)
+
+The code below estimates simple regressions of the political leaning (rght) and log income (log.inc) on the remaining demographic characteristics of the respondents. The model results are stored in new objects called m.pol and m.inc.
+
+**Note:** Political leaning is a categorical variable, log income is a continuous variable.
+
+**Note:** For continuous dependent variables, it might be preferable to use the lm() function. This function estimates the same model as the GLM with the normal distribution and identity link function. Because it is more specialized (and uses Ordinary Least Squares estimation), it provides a broader range of diagnostic statistics, however.
+
+```{r est-model}
+# Estimate models
+## Right-leaning (0 = No, 1 = Yes)
+m.pol <- glm(
+  formula = as.factor(rght) ~ age + sex + east + bger + mstat + emp + edu + hhincc + rel, 
+  family = binomial(link = "logit"),
+  data = df.pol
+  )
+
+## Log income
+m.inc <- glm(
+  formula = log.inc ~ age + sex + east + bger + mstat + edu + rel, 
+  family = gaussian(link = "identity"),
+  data = df.inc
+  )
+
+## Log income with lm()
+m.inc2 <- lm(
+  formula = log.inc ~ age + sex + east + bger + mstat + edu + rel,
+  data = df.inc
+  )
+```
+
+## Inspecting model results
+
+```{r results-1}
+# Inspect object
+m.pol
+m.inc
+m.inc2
+
+# Use summary()
+summary(m.pol)
+summary(m.inc)
+res.inc2 <- summary(m.inc2)
+res.inc2
+```
+
+You see that both glm() and lm() provide a list as output. You can inspect these lists the same way as any other list. Try typing "m.inc\$" and "m.inc2\$" in the console. You can do the same with the output of summary().
+
+You can use the predict.lm() and predict.glm() functions to get out-of-sample predictions based on the estimated model.
+
+```{r results-2}
+# Get coefficients, residuals, fitted values, ...
+m.inc$coefficients
+m.inc$residuals
+m.inc$fitted.values
+
+# Get R2, adjusted R2, F-statistic, ...
+res.inc2$r.squared
+res.inc2$adj.r.squared
+res.inc2$fstatistic
+
+# Get predictions
+pred.inc <- predict.lm(object = m.inc2, newdata = df.pol)
+pred.pol <- predict.glm(object = m.inc, newdata = df.pol) # Same result
+```
+
+## Testing hypotheses
+
+You can test whether a (group of) variable(s) improves the model fit significantly by estimating two nested models:
+
+-   m1 that includes all explanatory variables
+
+-   m2 that excludes one (or more) of the explanatory variables
+
+We say that m2 is nested within m1. The corresponding test is an F-test. For the example below, the F-statistic is F = 65.729, which is highly statistically significant (with p \< .001).
+
+In the same way, we can test whether the effects of two (or more) explanatory variables are different from each other. To do this, we estimate two nested models:
+
+-   m1 that estimates a separate effect for each explanatory variable
+
+-   m2 that restricts the effects of two (or more) variables to be equal
+
+**Note:** The anova() function also works for glm objects.
+
+```{r test-var-groups}
+# Estimate nested models
+## Unrestricted model with age and sex
+m1 <- lm(
+  formula = log.inc ~ age + sex + east + bger + mstat + edu + rel,
+  data = df.inc
+  )
+## Restricted model without age and sex
+m2 <- lm(
+  formula = log.inc ~ east + bger + mstat + edu + rel,
+  data = df.inc
+  )
+
+# Test whether age and sex jointly contribute to explaining income
+## Syntax: anova(restricted_model, unrestricted_model)
+anova(m2, m1)
+
+# Test whether the effect of age and HH income is the same
+## Unrestricted model: age and income have separate effects
+m1 <- lm(
+  formula = log.inc ~ east + bger + mstat + edu + rel + age + hhincc,
+  data = df.inc
+  )
+## Restricted model: age and income should have the same effect
+m2 <- lm(
+  formula = log.inc ~ east + bger + mstat + edu + rel + I(age + hhincc),
+  data = df.inc
+  )
+anova(m2, m1)
+```
+
+## Communicating results
+
+The **modelsummary()** function produces highly flexible tables for the results of (multiple) regression models. It can output and save these tables in various formats, including plain text (.txt), Word (.docx), HTML, Latex, and Markdown. Below, you find a template for a typical results table.
+
+The modelsummary() function even calculates various types of robust standard errors. See ?modelsummary for more information.
+
+To learn more about modelsummary(), have a look at its vignette ([link](https://vincentarelbundock.github.io/modelsummary/articles/modelsummary.html)).
+
+```{r res-table}
+# Additional rows for reference groups
+rows <- tribble(
+  # Strcture: Label, what to display in model columns (here: only "-" to indicate reference group)
+  ~term, ~m.inc, ~m.pol,
+  "Sex: Female", "-", "-",
+  "Residence: East", "-", "-",
+  "Born: Elsewhere", "-", "-",
+  "Divorced", "-", "-",
+  "Education: Tert.", "-", "-",
+  "Religion: Christ.", "-", "-",
+  "Work: Unempl.", "-", "-"
+  )
+# Position at which rows for reference groups are added
+attr(rows, "position") <- c(5, 8, 11, 14, 23, 28, 33)
+
+# Create table
+modelsummary(
+  # Select models (with named list)
+  models = list("Log. income" = m.inc, "Right-leaning" = m.pol),
+  # Select output format
+  output = "markdown",
+  # Format of numeric values (2 digits)
+  fmt = 2,
+  # What to report? (row 1): Select statistics with {...}
+  estimate = "{estimate} ({std.error})",
+  # What to report? (row 2)
+  statistic = "[{conf.low}, {conf.high}]",
+  # Label explanatory variables
+  coef_rename = c(
+    "(Intercept)" = "Intercept",
+    age = "Age",
+    sexMale = "Sex: Male",
+    eastWest = "Residence: West",
+    bgerYes = "Born: In GER",
+    "mstatMarried, in RG" = "Married",
+    mstatSeparated = "Separated",
+    mstatSingle = "Single",
+    mstatWidowed = "Widow",
+    "eduBelow upper second" = "Education: Below Upp Sec",
+    "eduUpper second" = "Education: Upp Sec",
+    "relNo denomination" = "Religion: None",
+    "relOther" = "Religion: Other",
+    empYes = "Work: Employed",
+    hhincc = "HH Income"
+  ),
+  # Add rows for reference groups
+  add_rows = rows,
+  # Select goodness-of-fit statistics (use get_gof(model) to see available stats)
+  gof_map = list(
+    # raw = name of stat, clean = label for stat, fmt = digits
+    list("raw" = "nobs", "clean" = "N", "fmt" = 2),
+    list("raw" = "r.squared", "clean" = "R2", "fmt" = 2),
+    list("raw" = "aic", "clean" = "AIC", "fmt" = 2),
+    list("raw" = "bic", "clean" = "BIC", "fmt" = 2),
+    list("raw" = "logLik", "clean" = "Log. Like", "fmt" = 2),
+    list("raw" = "rmse", "clean" = "RMSE", "fmt" = 2)
+    ),
+  # Add title
+  title = "GLM regression of income and political leaning",
+  # Get Odds Ratios for binary outcome (right-leaning, the second model)
+  exponentiate = c(FALSE, TRUE)
+)
+```
+
+It is becoming increasingly common to communicate regression results visually rather than in tables. The **dwplot()** function from the dotwhisker package creates plots in which the effect is represented as a DOT, surrounded by its 95% confidence interval as WHISKERS. Under the hood, dwplot() works with ggplot(). Therefore, we can use all ggplot() functionality to improve the appearance of the plot.
+
+```{r dot-whisker}
+dwplot(
+  # Model object to plot
+  x = m.inc,
+  # Change appearance of dots
+  dot_args = list(size = 1.5, fill = "black", color = "black"),
+  # Change appearance of whiskers
+  whisker_args = list(color = "grey40")
+  ) %>% 
+  # Provide nicer labels
+  relabel_predictors(
+    "(Intercept)" = "Intercept",
+    age = "Age",
+    sexMale = "Sex: Male",
+    eastWest = "Residence: West",
+    bgerYes = "Born: In GER",
+    "mstatMarried, in RG" = "Married",
+    mstatSeparated = "Separated",
+    mstatSingle = "Single",
+    mstatWidowed = "Widow",
+    "eduBelow upper second" = "Education: Below Upp Sec",
+    "eduUpper second" = "Education: Upp Sec",
+    "relNo denomination" = "Religion: None",
+    "relOther" = "Religion: Other"
+    # We are now inside ggplot: Use "+", not %>% 
+  ) + 
+  # Vertical line
+  geom_vline(
+    xintercept = 0,
+    linetype = "dashed",
+    color = "black",
+    alpha = .3
+    ) +
+  # Title, axis label
+  labs(
+    title = "Predicting log. income, OLS estimates",
+    x = "Coefficients"
+    ) +
+  # Rotate x-axis labels
+  guides(x =  guide_axis(angle = 45)) +
+  # Nicer theme
+  theme_bw() +
+  # Remove unnecessary legend
+  theme(
+    legend.position = "none"
+  ) +
+  # Flip coordinate system (swap x-axis and y-axis)
+  coord_flip()
+```
+
+## Marginal effects
+
+The *margins* package produces STATA-style marginal effects. If you are interested, take a look at the package vignette ([link](https://cran.r-project.org/web/packages/margins/vignettes/Introduction.html)).
