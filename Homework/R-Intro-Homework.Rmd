@@ -1,0 +1,281 @@
+---
+title: "Introduction to R - Homework^[Please do not circulate without permission from the author.]"
+author: "Matthias Kuppler^[Department of Social Sciences, University Siegen. Email: <matthias.kuppler@uni-siegen.de>.]"
+date: "Version: `r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    df_print: paged
+    number_sections: true
+---
+
+```{r setup-chunks, echo=FALSE}
+# Set code chunk options
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+# Introduction
+
+In the next session, we will use the ALLBUS data to perform some simple analyses. In particular, we want to investigate two questions:
+
+1.  How well do basic demographic characteristics of the respondents predict their income?
+2.  How well do these characteristics predict whether the respondents lean to the right of the political spectrum?
+
+Your task will be to prepare the data set with which we will investigate these two questions. You will need to ...
+
+-   Load the required R packages
+-   Import the original ALLBUS 2021 data (stored as .dta files)
+-   Select the relevant variables
+-   Declare the missing values
+-   Prepare the existing variables and create new ones
+-   Select the analysis sample
+-   Save the resulting data set as a .txt file
+
+# Setup
+
+```{r setup}
+# Clear all
+rm(list = ls())
+
+# Load packages
+
+```
+
+# Data import
+
+```{r import-data}
+# Load ALLBUS
+df <- 
+```
+
+# Variable selection
+
+The table below shows the variables that we need along with their value range.
+
++---------------+--------------------------------------+-----------------------------------+
+| Variable name | Definition                           | Value range                       |
++===============+======================================+===================================+
+| respid        | Respondent ID                        |                                   |
++---------------+--------------------------------------+-----------------------------------+
+| di01a         | Monthly income in €                  | Continuous (20 to 15,000)         |
+|               |                                      |                                   |
+|               |                                      | -50 (no own income)               |
++---------------+--------------------------------------+-----------------------------------+
+| pa01          | Political leaning                    | 1 (left) to 10 (right)            |
++---------------+--------------------------------------+-----------------------------------+
+| age           | Age in years                         | Continuous (18 to 96)             |
++---------------+--------------------------------------+-----------------------------------+
+| sex           | Sex                                  | 1 (male), 2 (female), 3 (diverse) |
++---------------+--------------------------------------+-----------------------------------+
+| dn07          | Born in Germany?                     | 1 (yes), 2 (no)                   |
++---------------+--------------------------------------+-----------------------------------+
+| eastwest      | Residence in East or West Germany    | 1 (West), 2 (East)                |
++---------------+--------------------------------------+-----------------------------------+
+| mstat         | Family status                        | 1 (married)                       |
+|               |                                      |                                   |
+|               |                                      | 2 (married, living separately)    |
+|               |                                      |                                   |
+|               |                                      | 3 (widowed)                       |
+|               |                                      |                                   |
+|               |                                      | 4 (divorced)                      |
+|               |                                      |                                   |
+|               |                                      | 5 (single)                        |
+|               |                                      |                                   |
+|               |                                      | 6 (registered partnership RG)     |
+|               |                                      |                                   |
+|               |                                      | 7 (RG, living separately)         |
+|               |                                      |                                   |
+|               |                                      | 8 (RG, widowed)                   |
+|               |                                      |                                   |
+|               |                                      | 9 (RG, annulled)                  |
++---------------+--------------------------------------+-----------------------------------+
+| work          | Employment status                    | 1 (full-time)                     |
+|               |                                      |                                   |
+|               |                                      | 2 (part-time)                     |
+|               |                                      |                                   |
+|               |                                      | 3 (occasional)                    |
+|               |                                      |                                   |
+|               |                                      | 4 (unemployed)                    |
++---------------+--------------------------------------+-----------------------------------+
+| iscd11        | Educational attainment               | 1 (primary)                       |
+|               |                                      |                                   |
+|               |                                      | 2 (lower second)                  |
+|               |                                      |                                   |
+|               |                                      | 3 (upper second)                  |
+|               |                                      |                                   |
+|               |                                      | 4 (post-second)                   |
+|               |                                      |                                   |
+|               |                                      | 5 (short tertiary)                |
+|               |                                      |                                   |
+|               |                                      | 6 (Bachelor)                      |
+|               |                                      |                                   |
+|               |                                      | 7 (Master)                        |
+|               |                                      |                                   |
+|               |                                      | 8 (Doctoral)                      |
++---------------+--------------------------------------+-----------------------------------+
+| hhincc        | Monthly household income in € (cat.) | -50 (no income)                   |
+|               |                                      |                                   |
+|               |                                      | 1 (\< 200) to 26 (\>= 10,000)     |
++---------------+--------------------------------------+-----------------------------------+
+| rd01          | Religious denomination               | 1 (Protestant)                    |
+|               |                                      |                                   |
+|               |                                      | 2 (Protestant, free)              |
+|               |                                      |                                   |
+|               |                                      | 3 (Catholic)                      |
+|               |                                      |                                   |
+|               |                                      | 4 (Other, Christian)              |
+|               |                                      |                                   |
+|               |                                      | 5 (Other, non-Christian)          |
+|               |                                      |                                   |
+|               |                                      | 6 (no denomination)               |
++---------------+--------------------------------------+-----------------------------------+
+
+: Required ALLBUS variables
+
+```{r select-columns}
+# Select variables
+
+```
+
+# Declare missing values
+
+You can re-use the code from session 3.
+
++--------------+-----------------------------------------------------------------------+
+| Missing code | Definition                                                            |
++==============+=======================================================================+
+| -1           | Not collected (in the specific ALLBUS wave)                           |
++--------------+-----------------------------------------------------------------------+
+| -6           | Item not known to respondent                                          |
++--------------+-----------------------------------------------------------------------+
+| -7           | Refusal                                                               |
++--------------+-----------------------------------------------------------------------+
+| -8           | Don't know                                                            |
++--------------+-----------------------------------------------------------------------+
+| -9           | No answer                                                             |
++--------------+-----------------------------------------------------------------------+
+| -10          | Does not apply (filter)                                               |
++--------------+-----------------------------------------------------------------------+
+| -11 to -14   | Item was not presented to respondent                                  |
++--------------+-----------------------------------------------------------------------+
+| -32          | Unable to create (for variables that are derived from multiple items) |
++--------------+-----------------------------------------------------------------------+
+| -33          | Open answer unclear/not readable                                      |
++--------------+-----------------------------------------------------------------------+
+| -34          | Not in data set (e.g., to preserve privacy)                           |
++--------------+-----------------------------------------------------------------------+
+| -41          | Data error                                                            |
++--------------+-----------------------------------------------------------------------+
+| -42          | Data error                                                            |
++--------------+-----------------------------------------------------------------------+
+| -50 to -59   | Item-specific missing code (e.g., "no income" for incc)               |
++--------------+-----------------------------------------------------------------------+
+| -88          | Data lost                                                             |
++--------------+-----------------------------------------------------------------------+
+
+: Missing value codes
+
+```{r declare-missing}
+# Define missing functions
+## All variables except income
+
+## Income variables
+
+
+# Apply function across columns of data set
+
+```
+
+# Prepare variables
+
+For the analysis, we need to create the following variables:
+
+-   log.inc: natural logarithm of di01a
+-   rght: binary indicator (factor) created from the variable pa01 such that level 1 is "Yes" (if pa01 \> 7) and level 0 is "No" (if pa01 \< 8)
+-   sex: create factor from sex such that level 1 is "Male" and level 2 is "Female"; exclude respondents for which sex is "diverse" (the group is too small to make meaningful statements)
+-   bger: create factor from dn07 such that level 1 is "Yes" and level 2 is "No"
+-   east: create factor from eastwest such that level 1 is "West" and level 2 is "East"
+-   mstat: recode the original mstat variable into a factor with levels "Married/In RG" if mstat = 1 or 6, "Separated" if mstat = 2 or 7, "Widowed" if mstat = 3 or 8, "Divorced/Annulled" if mstat = 4 or 9, and "Single" if mstat = 5
+-   emp: binary indicator such that level 1 is "employed" (work \< 4) and level 0 is "unemployed" (work = 4)
+-   edu: factor with the levels "Below upper second", "Upper second", and "Above upper second", derived from iscd11
+-   rel: factor with the levels "Christian", "Other", and "No denomination", derived from rd01
+-   inc: renamed from di01a
+
+If you are unsure whether the recoding worked, use table(df\$old-var, df\$new-var).
+
+Please keep the newly created variables (log.inc, rght, sex, bger, east, mstat, emp, edu, rel) and some of the old variables (respid, age, inc, hhinc).
+
+```{r prep-cols}
+# Prepare variables
+df <- 
+```
+
+# Select analysis sample
+
+We will need two different samples: Sample A (called df.pol) for the analysis of political leaning and Sample B (called df.inc) for the analysis of income. Please select the following samples for the analysis:
+
+-   Sample A: All respondents aged 21 or older (i.e., those who were eligible to vote in the 2018 Federal election) for which all variables except income (inc, log.inc) are non-missing. Remove the two income columns before removing respondents with missing values
+-   Sample B: All respondents who are employed and for which all variables (including income!) are non-missing
+
+**Tip:** Use the na.exclude() function to remove all rows with at least one missing value on any column (list-wise deletion). See ?na.exclude for more information.
+
+The size of Sample A should be N = 3,878, the size of Sample B should be N = 846.
+
+```{r filter-rows}
+# Sample A
+
+# Sample B
+
+```
+
+# Bonus: Compare respondents
+
+It might be interesting to know whether the respondents that we exclude differ from the respondents that we keep with respect to the value of the dependent variables (inc and rght). One approach would be to:
+
+1.  Create a new variable that indicates whether the respondent is in the analysis sample or not
+2.  Use a grouped summary to calculate the means, standard deviations as well as the min and max values of the dependent variables
+
+The results suggest that the political orientation of respondents in the sample does not really differ from the political orientation of the respondents that we excluded. Respondents in the sample tend to have a higher income than the respondents that we excluded.
+
+```{r bonus}
+# Create indicators
+df <- df %>% 
+  mutate(
+    # roSums(...) calculates the number of missing values across columns within each row
+    in.sampleA = ifelse(rowSums(is.na(x = df[-c(2:3)])) == 0 & age >= 21, 1, 0),
+    in.sampleB = ifelse(rowSums(is.na(x = df)) == 0 & emp == "Yes", 1, 0)
+  )
+
+# Compare samples
+df %>% 
+  mutate(
+    # Convert to numeric such that we can compute the mean and SD
+    rght = as.numeric(rght) - 1
+  ) %>% 
+  group_by(in.sampleA) %>% 
+  summarize(
+    n = n(),
+    mean = mean(rght, na.rm = TRUE),
+    sd = sd(rght, na.rm = TRUE),
+    min = min(rght, na.rm = TRUE),
+    max = max(rght, na.rm = TRUE)
+  )
+
+df %>% 
+  group_by(in.sampleB) %>% 
+  summarize(
+    n = n(),
+    mean = mean(inc, na.rm = TRUE),
+    sd = sd(inc, na.rm = TRUE),
+    min = min(inc, na.rm = TRUE),
+    max = max(inc, na.rm = TRUE)
+  )
+```
+
+# Save data sets
+
+Please save the two resulting data sets (df.pol and df.inc) in the pdata sub-folder. The name of the file for df.pol should be *ALLBUS-2021-Polit.txt*, the name for df.inc should be *ALLBUS-2021-Income.txt*. Save the data sets as tab-separated text files.
+
+```{r save-data}
+# Save data sets
+
+```
